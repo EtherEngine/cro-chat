@@ -1,7 +1,5 @@
-
-<img width="1612" height="989" alt="cro_chat1" src="https://github.com/user-attachments/assets/51fbd305-3e88-499d-9608-807419dfa583" />
 <img width="1612" height="989" alt="cro_chat2" src="https://github.com/user-attachments/assets/92e9c2a0-d847-4474-a81a-daa6c12fd935" />
-
+<img width="1612" height="989" alt="cro_chat1" src="https://github.com/user-attachments/assets/51fbd305-3e88-499d-9608-807419dfa583" />
 
 # crø
 
