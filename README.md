@@ -1,4 +1,6 @@
-﻿# crø
+﻿![cro-chat_1](https://github.com/user-attachments/assets/d22ef557-1102-4947-abf1-d6a6670b27f1)
+![cro-chat_2](https://github.com/user-attachments/assets/8400e43a-8928-4a23-bf48-e8fc61d7ee56)
+# crø
 
 Team-Chat-Anwendung – PHP-Backend, React-Frontend, MariaDB.
 
