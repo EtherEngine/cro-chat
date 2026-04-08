@@ -1,0 +1,22 @@
+{
+  "name": "cro-realtime",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "mysql2": "^3.11.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "@types/ws": "^8.5.12",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.4"
+  }
+}

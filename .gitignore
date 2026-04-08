@@ -1,0 +1,10 @@
+﻿node_modules/
+dist/
+build/
+vendor/
+.env
+.DS_Store
+Thumbs.db
+coverage/
+apps/chat-api/storage/uploads/*
+!apps/chat-api/storage/uploads/.gitkeep

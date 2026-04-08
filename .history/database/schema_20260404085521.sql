@@ -1,0 +1,65 @@
+﻿-- cro_chat Database Schema
+-- MariaDB / MySQL
+
+CREATE DATABASE IF NOT EXISTS cro_chat
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE cro_chat;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL DEFAULT '',
+  display_name VARCHAR(100) NOT NULL,
+  title VARCHAR(150) NOT NULL DEFAULT '',
+  avatar_color CHAR(7) NOT NULL DEFAULT '#7C3AED',
+  status ENUM('online','away','offline') NOT NULL DEFAULT 'offline',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS channels (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(255) NOT NULL DEFAULT '',
+  color CHAR(7) NOT NULL DEFAULT '#7C3AED',
+  created_by INT UNSIGNED DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS channel_members (
+  channel_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NOT NULL,
+  joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (channel_id, user_id),
+  FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS conversation_members (
+  conversation_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NOT NULL,
+  PRIMARY KEY (conversation_id, user_id),
+  FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS messages (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  body TEXT NOT NULL,
+  user_id INT UNSIGNED NOT NULL,
+  channel_id INT UNSIGNED DEFAULT NULL,
+  conversation_id INT UNSIGNED DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+  FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+  INDEX idx_channel_created (channel_id, created_at),
+  INDEX idx_conversation_created (conversation_id, created_at)
+) ENGINE=InnoDB;
