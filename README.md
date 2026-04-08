@@ -1,5 +1,8 @@
-﻿![cro-chat_1](https://github.com/user-attachments/assets/d22ef557-1102-4947-abf1-d6a6670b27f1)
-![cro-chat_2](https://github.com/user-attachments/assets/8400e43a-8928-4a23-bf48-e8fc61d7ee56)
+
+<img width="1612" height="989" alt="cro_chat1" src="https://github.com/user-attachments/assets/51fbd305-3e88-499d-9608-807419dfa583" />
+<img width="1612" height="989" alt="cro_chat2" src="https://github.com/user-attachments/assets/92e9c2a0-d847-4474-a81a-daa6c12fd935" />
+
+
 # crø
 
 Team-Chat-Anwendung – PHP-Backend, React-Frontend, MariaDB.
