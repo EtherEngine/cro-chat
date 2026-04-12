@@ -1,0 +1,103 @@
+{"ts":"2026-04-11T20:34:00+02:00","level":"warning","message":"Slow query (146.4563ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:05+02:00","level":"warning","message":"Slow query (473.2691ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:07+02:00","level":"warning","message":"Slow query (143.9862ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:13+02:00","level":"warning","message":"Slow query (95.6408ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:20+02:00","level":"warning","message":"Slow query (164.5381ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T20:34:21+02:00","level":"warning","message":"Slow query (156.6862ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:35+02:00","level":"warning","message":"Slow query (83.464ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:45+02:00","level":"warning","message":"Slow query (72.2957ms): INSERT INTO security_log (user_id, event_type, severity, ip_address, user_agent, details, created_at)\r\n             VALUES (?, ?, ?, ?, ?, ?, NOW())"}
+{"ts":"2026-04-11T20:34:46+02:00","level":"warning","message":"Slow query (65.0949ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:46+02:00","level":"warning","message":"Slow query (57.2428ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:50+02:00","level":"warning","message":"Slow query (103.8317ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:57+02:00","level":"warning","message":"Slow query (76.6751ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:34:58+02:00","level":"warning","message":"Slow query (303.7106ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T20:35:00+02:00","level":"warning","message":"Slow query (67.6676ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:03:59+02:00","level":"warning","message":"Slow query (84.2611ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:01+02:00","level":"warning","message":"Slow query (85.7791ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:01+02:00","level":"warning","message":"Slow query (116.223ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:04:07+02:00","level":"warning","message":"Slow query (54.5646ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:12+02:00","level":"warning","message":"Slow query (60.3138ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:15+02:00","level":"warning","message":"Slow query (194.0175ms): INSERT INTO conversations (space_id, is_group, title, created_by, participant_hash) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:18+02:00","level":"warning","message":"Slow query (248.1381ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:28+02:00","level":"warning","message":"Slow query (57.2387ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:28+02:00","level":"warning","message":"Slow query (59.0416ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:04:31+02:00","level":"warning","message":"Slow query (70.7849ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:38+02:00","level":"warning","message":"Slow query (74.7135ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:44+02:00","level":"warning","message":"Slow query (398.7038ms): UPDATE calls SET started_at = DATE_SUB(NOW(), INTERVAL ? SECOND) WHERE id = ?"}
+{"ts":"2026-04-11T21:04:45+02:00","level":"warning","message":"Slow query (75.5843ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:48+02:00","level":"warning","message":"Slow query (73.0493ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:04:49+02:00","level":"warning","message":"Slow query (51.6622ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:49+02:00","level":"warning","message":"Slow query (102.2432ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:04:49+02:00","level":"warning","message":"Slow query (102.0167ms): SELECT id, conversation_id, caller_user_id, callee_user_id, status,\r\n                       started_at, answered_at, ended_at, duration_seconds, end_reason, created_at\r\n                FROM calls\r\n   "}
+{"ts":"2026-04-11T21:04:53+02:00","level":"warning","message":"Slow query (60.0145ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:53+02:00","level":"warning","message":"Slow query (64.9555ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:54+02:00","level":"warning","message":"Slow query (173.3848ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:55+02:00","level":"warning","message":"Slow query (213.5118ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:04:59+02:00","level":"warning","message":"Slow query (55.243ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:04:59+02:00","level":"warning","message":"Slow query (156.4853ms): INSERT INTO conversations (space_id, is_group, title, created_by, participant_hash) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:05:05+02:00","level":"warning","message":"Slow query (121.1282ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:05:05+02:00","level":"warning","message":"Slow query (109.8648ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:05:06+02:00","level":"warning","message":"Slow query (198.1207ms): INSERT INTO security_log (user_id, event_type, severity, ip_address, user_agent, details, created_at)\r\n             VALUES (?, ?, ?, ?, ?, ?, NOW())"}
+{"ts":"2026-04-11T21:05:09+02:00","level":"warning","message":"Slow query (169.1396ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:10+02:00","level":"warning","message":"Slow query (73.2965ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:12+02:00","level":"warning","message":"Slow query (183.7456ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:19+02:00","level":"warning","message":"Slow query (98.5789ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:25+02:00","level":"warning","message":"Slow query (162.3411ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:29+02:00","level":"warning","message":"Slow query (89.594ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:10:29+02:00","level":"warning","message":"Slow query (88.2794ms): SELECT blocked_until FROM abuse_scores\r\n             WHERE subject_type = ? AND subject_key = ? AND blocked_until > NOW()"}
+{"ts":"2026-04-11T21:10:36+02:00","level":"warning","message":"Slow query (201.2619ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:10:37+02:00","level":"warning","message":"Slow query (55.1762ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:43+02:00","level":"warning","message":"Slow query (94.5104ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:48+02:00","level":"warning","message":"Slow query (61.5847ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:50+02:00","level":"warning","message":"Slow query (273.3257ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:56+02:00","level":"warning","message":"Slow query (68.3773ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:10:57+02:00","level":"warning","message":"Slow query (110.6932ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:00+02:00","level":"warning","message":"Slow query (51.8564ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:00+02:00","level":"warning","message":"Slow query (121.8653ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:05+02:00","level":"warning","message":"Slow query (169.9444ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:38+02:00","level":"warning","message":"Slow query (57.9026ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:41+02:00","level":"warning","message":"Slow query (62.7063ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:41+02:00","level":"warning","message":"Slow query (82.2716ms): INSERT INTO space_members (space_id, user_id, role) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:11:41+02:00","level":"warning","message":"Slow query (61.6937ms): INSERT INTO conversations (space_id, is_group, title, created_by, participant_hash) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:47+02:00","level":"warning","message":"Slow query (162.8567ms): INSERT INTO calls (conversation_id, caller_user_id, callee_user_id, status)\r\n             VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:48+02:00","level":"warning","message":"Slow query (170.0109ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:53+02:00","level":"warning","message":"Slow query (61.2628ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:11:53+02:00","level":"warning","message":"Slow query (164.2068ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:01+02:00","level":"warning","message":"Slow query (80.5986ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:02+02:00","level":"warning","message":"Slow query (138.1892ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:05+02:00","level":"warning","message":"Slow query (86.4999ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:07+02:00","level":"warning","message":"Slow query (93.5972ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:08+02:00","level":"warning","message":"Slow query (126.7758ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:15+02:00","level":"warning","message":"Slow query (99.7464ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:12:15+02:00","level":"warning","message":"Slow query (101.6219ms): SELECT id, conversation_id, caller_user_id, callee_user_id, status,\r\n                       started_at, answered_at, ended_at, duration_seconds, end_reason, created_at\r\n                FROM calls\r\n   "}
+{"ts":"2026-04-11T21:12:19+02:00","level":"warning","message":"Slow query (178.5935ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:12:20+02:00","level":"warning","message":"Slow query (147.6224ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:26+02:00","level":"warning","message":"Slow query (133.2902ms): INSERT INTO conversations (space_id, is_group, title, created_by, participant_hash) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:32+02:00","level":"warning","message":"Slow query (161.4964ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:32+02:00","level":"warning","message":"Slow query (68.8348ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:12:35+02:00","level":"warning","message":"Slow query (104.3896ms): UPDATE call_sessions SET left_at = NOW() WHERE call_id = ? AND user_id = ?"}
+{"ts":"2026-04-11T21:12:37+02:00","level":"warning","message":"Slow query (102.1977ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:15:59+02:00","level":"warning","message":"Slow query (76.5572ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:15:59+02:00","level":"warning","message":"Slow query (87.2829ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:02+02:00","level":"warning","message":"Slow query (89.437ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:08+02:00","level":"warning","message":"Slow query (61.936ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:26+02:00","level":"warning","message":"Slow query (120.2439ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:37+02:00","level":"warning","message":"Slow query (79.8181ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:38+02:00","level":"warning","message":"Slow query (56.423ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:16:43+02:00","level":"warning","message":"Slow query (63.0729ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:16:46+02:00","level":"warning","message":"Slow query (93.7981ms): \r\n            INSERT INTO analytics_events (space_id, user_hash, event_type, event_category, channel_id, metadata)\r\n            VALUES (?, ?, ?, ?, ?, ?)\r\n        "}
+{"ts":"2026-04-11T21:17:01+02:00","level":"warning","message":"Slow query (100.7666ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:17:59+02:00","level":"warning","message":"Slow query (196.6174ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:18:00+02:00","level":"warning","message":"Slow query (119.9281ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:18:13+02:00","level":"warning","message":"Slow query (230.8574ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:18:17+02:00","level":"warning","message":"Slow query (251.6581ms): INSERT INTO spaces (name, slug, description, owner_id) VALUES (?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:19:33+02:00","level":"warning","message":"Slow query (135.7537ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:19:33+02:00","level":"warning","message":"Slow query (111.1503ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:19:35+02:00","level":"warning","message":"Slow query (149.8197ms): UPDATE users SET status = ?, last_seen_at = NOW() WHERE id = ?"}
+{"ts":"2026-04-11T21:19:36+02:00","level":"warning","message":"Slow query (65.1761ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:19:38+02:00","level":"warning","message":"Slow query (84.1362ms): INSERT INTO security_log (user_id, event_type, severity, ip_address, user_agent, details, created_at)\r\n             VALUES (?, ?, ?, ?, ?, ?, NOW())"}
+{"ts":"2026-04-11T21:19:38+02:00","level":"warning","message":"Slow query (77.1817ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}
+{"ts":"2026-04-11T21:19:41+02:00","level":"warning","message":"Slow query (54.3513ms): INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?)"}
+{"ts":"2026-04-11T21:19:41+02:00","level":"warning","message":"Slow query (196.7006ms): INSERT INTO domain_events (event_type, room, payload) VALUES (?, ?, ?)"}
+{"ts":"2026-04-11T21:19:41+02:00","level":"warning","message":"Slow query (58.9927ms): SELECT id, space_id, is_group, title, created_by, avatar_url, participant_hash, created_at\r\n             FROM conversations WHERE id = ?"}
+{"ts":"2026-04-11T21:19:42+02:00","level":"warning","message":"Slow query (193.628ms): INSERT INTO users (email, password_hash, display_name, title, avatar_color) VALUES (?, ?, ?, ?, ?)"}

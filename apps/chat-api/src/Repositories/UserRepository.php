@@ -93,13 +93,18 @@ final class UserRepository
 
     public static function touchPresence(int $id): void
     {
+        // Do NOT overwrite call-driven states (ringing, in_call, dnd).
+        // Only update last_seen_at and set status to 'online' if the user
+        // is in a heartbeat-managed state.
         $stmt = Database::connection()->prepare(
-            'UPDATE users SET last_seen_at = NOW(), status = "online" WHERE id = ?'
+            "UPDATE users SET last_seen_at = NOW(), status = 'online'
+             WHERE id = ? AND status IN ('online','away','offline')"
         );
         $stmt->execute([$id]);
     }
 
-    /** Mark stale users (no heartbeat for >2min) as away, >10min as offline */
+    /** Mark stale users (no heartbeat for >2min) as away, >10min as offline.
+     *  Ignores call-driven states (ringing, in_call, dnd). */
     public static function expirePresence(): void
     {
         Database::connection()->exec("
@@ -110,6 +115,32 @@ final class UserRepository
             UPDATE users SET status = 'offline'
             WHERE status IN ('online','away') AND last_seen_at < DATE_SUB(NOW(), INTERVAL 10 MINUTE)
         ");
+    }
+
+    /**
+     * Transition a user into a call-driven presence state.
+     * Valid values: 'ringing', 'in_call'.
+     */
+    public static function setCallPresence(int $id, string $callStatus): void
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE users SET status = ?, last_seen_at = NOW() WHERE id = ?'
+        );
+        $stmt->execute([$callStatus, $id]);
+    }
+
+    /**
+     * Restore presence to 'online' after a call ends.
+     * Only acts if the user is currently in a call state,
+     * preventing accidental overwrite of a manual 'dnd'.
+     */
+    public static function clearCallPresence(int $id): void
+    {
+        $stmt = Database::connection()->prepare(
+            "UPDATE users SET status = 'online', last_seen_at = NOW()
+             WHERE id = ? AND status IN ('ringing','in_call')"
+        );
+        $stmt->execute([$id]);
     }
 }
 

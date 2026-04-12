@@ -18,6 +18,9 @@ final class NotificationService
     public const TYPE_DM = 'dm';
     public const TYPE_THREAD_REPLY = 'thread_reply';
     public const TYPE_REACTION = 'reaction';
+    public const TYPE_CALL_MISSED = 'call_missed';
+    public const TYPE_CALL_REJECTED = 'call_rejected';
+    public const TYPE_CALL_INCOMING = 'call_incoming';
 
     /** When true, notifications are dispatched via the job queue instead of synchronously. */
     private static bool $async = false;
@@ -175,6 +178,116 @@ final class NotificationService
             $msg['thread_id'],
             ['emoji' => $emoji],
             SpacePolicy::resolveSpaceId($channelId, $conversationId)
+        );
+    }
+
+    // ── Call notifications ───────────────────
+
+    /**
+     * Notify the callee about an incoming call.
+     * Dispatched synchronously (high priority) for real-time ring UI.
+     * Push is always sent so the callee's device rings even when the tab is closed.
+     */
+    public static function notifyIncomingCall(
+        int $calleeId,
+        int $callerId,
+        int $conversationId,
+        int $callId
+    ): void {
+        $spaceId = SpacePolicy::resolveSpaceId(null, $conversationId);
+
+        $data = [
+            'call_id' => $callId,
+            'conversation_id' => $conversationId,
+        ];
+
+        // Always synchronous + push for incoming calls (latency-critical)
+        $notification = NotificationRepository::create(
+            $calleeId,
+            self::TYPE_CALL_INCOMING,
+            $callerId,
+            null,
+            null,
+            $conversationId,
+            null,
+            $data,
+            $spaceId
+        );
+
+        EventRepository::publish('notification.created', "user:$calleeId", $notification);
+
+        // Push regardless of global flag — calls must ring device
+        JobService::dispatch(
+            'push.send',
+            [
+                'user_id' => $calleeId,
+                'space_id' => $spaceId,
+                'notification_id' => (int) $notification['id'],
+            ],
+            'notifications',
+            3,
+            100 // highest priority — ringing
+        );
+    }
+
+    /**
+     * Notify the callee about a missed call.
+     * Skips self-notification (caller never receives a "missed" notification).
+     */
+    public static function notifyMissedCall(
+        int $calleeId,
+        int $callerId,
+        int $conversationId,
+        int $callId,
+        ?string $endReason = null
+    ): void {
+        $spaceId = SpacePolicy::resolveSpaceId(null, $conversationId);
+
+        $data = [
+            'call_id' => $callId,
+            'conversation_id' => $conversationId,
+            'end_reason' => $endReason,
+        ];
+
+        self::createAndPublish(
+            $calleeId,
+            self::TYPE_CALL_MISSED,
+            $callerId,
+            null,
+            null,
+            $conversationId,
+            null,
+            $data,
+            $spaceId
+        );
+    }
+
+    /**
+     * Notify the caller that their call was rejected by the callee.
+     */
+    public static function notifyCallRejected(
+        int $callerId,
+        int $calleeId,
+        int $conversationId,
+        int $callId
+    ): void {
+        $spaceId = SpacePolicy::resolveSpaceId(null, $conversationId);
+
+        $data = [
+            'call_id' => $callId,
+            'conversation_id' => $conversationId,
+        ];
+
+        self::createAndPublish(
+            $callerId,
+            self::TYPE_CALL_REJECTED,
+            $calleeId,
+            null,
+            null,
+            $conversationId,
+            null,
+            $data,
+            $spaceId
         );
     }
 

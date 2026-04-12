@@ -7,7 +7,9 @@ use App\Controllers\AttachmentController;
 use App\Controllers\AuthController;
 use App\Controllers\ChannelController;
 use App\Controllers\ComplianceController;
+use App\Controllers\CallController;
 use App\Controllers\ConversationController;
+use App\Controllers\DevCallController;
 use App\Controllers\DeviceController;
 use App\Controllers\HealthController;
 use App\Controllers\IncomingWebhookController;
@@ -39,6 +41,7 @@ use App\Middleware\CsrfMiddleware;
 // --- Health probes (no auth) ---
 $router->get('/health/live', [HealthController::class, 'live']);
 $router->get('/health/ready', [HealthController::class, 'ready']);
+$router->get('/health/calls', [HealthController::class, 'calls']);
 $router->get('/api/scaling/health', [ScalingController::class, 'health']);
 
 // --- Public routes ---
@@ -129,6 +132,17 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function ($router
     $router->get('/api/conversations/{conversationId}/messages', [MessageController::class, 'listConversation']);
     $router->post('/api/conversations/{conversationId}/messages', [MessageController::class, 'createConversation']);
 
+    // Calls (1:1 audio)
+    $router->post('/api/calls', [CallController::class, 'initiate']);
+    $router->get('/api/calls/ice-servers', [CallController::class, 'iceServers']);
+    $router->get('/api/calls/{callId}', [CallController::class, 'show']);
+    $router->post('/api/calls/{callId}/accept', [CallController::class, 'accept']);
+    $router->post('/api/calls/{callId}/reject', [CallController::class, 'reject']);
+    $router->post('/api/calls/{callId}/cancel', [CallController::class, 'cancel']);
+    $router->post('/api/calls/{callId}/hangup', [CallController::class, 'hangup']);
+    $router->get('/api/conversations/{conversationId}/calls/active', [CallController::class, 'active']);
+    $router->get('/api/conversations/{conversationId}/calls', [CallController::class, 'history']);
+
     // Read receipts
     $router->post('/api/channels/{channelId}/read', [ReadReceiptController::class, 'markChannelRead']);
     $router->post('/api/conversations/{conversationId}/read', [ReadReceiptController::class, 'markConversationRead']);
@@ -137,6 +151,8 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function ($router
     // Presence
     $router->post('/api/presence/heartbeat', [PresenceController::class, 'heartbeat']);
     $router->get('/api/presence/status', [PresenceController::class, 'status']);
+    $router->post('/api/presence/dnd', [PresenceController::class, 'setDnd']);
+    $router->delete('/api/presence/dnd', [PresenceController::class, 'clearDnd']);
 
     // Search
     $router->get('/api/search', [SearchController::class, 'search']);
@@ -201,6 +217,7 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function ($router
     $router->get('/api/spaces/{spaceId}/analytics/notifications', [AnalyticsController::class, 'notificationEngagement']);
     $router->get('/api/spaces/{spaceId}/analytics/system', [AnalyticsController::class, 'systemEvents']);
     $router->get('/api/spaces/{spaceId}/analytics/daily', [AnalyticsController::class, 'dailyMetrics']);
+    $router->get('/api/spaces/{spaceId}/analytics/calls', [AnalyticsController::class, 'callMetrics']);
     $router->post('/api/spaces/{spaceId}/analytics/aggregate', [AnalyticsController::class, 'aggregate']);
     $router->get('/api/analytics/event-types', [AnalyticsController::class, 'eventTypes']);
 
@@ -409,4 +426,14 @@ $router->group([ApiTokenMiddleware::class, CsrfMiddleware::class], function ($ro
     $router->post('/api/v1/spaces/{spaceId}/incoming-webhooks', [IntegrationController::class, 'createIncoming']);
     $router->put('/api/v1/spaces/{spaceId}/incoming-webhooks/{incomingId}', [IntegrationController::class, 'updateIncoming']);
     $router->delete('/api/v1/spaces/{spaceId}/incoming-webhooks/{incomingId}', [IntegrationController::class, 'deleteIncoming']);
+});
+
+// ── Dev-only routes (guarded by APP_ENV=local inside the controller) ─────────────────────────
+// These routes fire a hard 403 on any environment where APP_ENV !== 'local'.
+// They exist as named routes in the router for convenience but are NOT accessible
+// in staging or production environments.
+$router->group([AuthMiddleware::class, CsrfMiddleware::class], function ($router) {
+    $router->get('/api/dev/calls/scenarios', [DevCallController::class, 'scenarios']);
+    $router->post('/api/dev/calls/simulate', [DevCallController::class, 'simulate']);
+    $router->post('/api/dev/calls/{callId}/bot-action', [DevCallController::class, 'botAction']);
 });

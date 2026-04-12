@@ -44,10 +44,10 @@ final class IncomingWebhookController
 
         // Route to provider-specific parser
         $message = match ($incoming['provider']) {
-            'github'  => $this->parseGitHub($payload),
-            'jira'    => $this->parseJira($payload),
-            'gitlab'  => $this->parseGitLab($payload),
-            default   => $this->parseGeneric($payload),
+            'github' => $this->parseGitHub($payload),
+            'jira' => $this->parseJira($payload),
+            'gitlab' => $this->parseGitLab($payload),
+            default => $this->parseGeneric($payload),
         };
 
         if ($message === null) {
@@ -115,7 +115,7 @@ final class IncomingWebhookController
             'issue_comment' => $this->formatGitHubComment($payload),
             'create' => $this->formatGitHubCreate($payload),
             'release' => $this->formatGitHubRelease($payload),
-            'ping' => "🏓 GitHub Webhook verbunden: **{$payload['repository']['full_name'] ?? 'unknown'}**",
+            'ping' => '🏓 GitHub Webhook verbunden: **' . ($payload['repository']['full_name'] ?? 'unknown') . '**',
             default => null,
         };
     }
@@ -182,7 +182,8 @@ final class IncomingWebhookController
 
     private function formatGitHubComment(array $p): ?string
     {
-        if (($p['action'] ?? '') !== 'created') return null;
+        if (($p['action'] ?? '') !== 'created')
+            return null;
         $comment = $p['comment'] ?? [];
         $issue = $p['issue'] ?? [];
         $user = $comment['user']['login'] ?? 'unknown';
@@ -202,7 +203,8 @@ final class IncomingWebhookController
 
     private function formatGitHubRelease(array $p): ?string
     {
-        if (($p['action'] ?? '') !== 'published') return null;
+        if (($p['action'] ?? '') !== 'published')
+            return null;
         $release = $p['release'] ?? [];
         $tag = $release['tag_name'] ?? 'unknown';
         $name = $release['name'] ?? $tag;
@@ -224,13 +226,13 @@ final class IncomingWebhookController
 
         return match (true) {
             str_contains($event, 'issue_created') =>
-                "🟢 **{$user}** erstellt: [{$key}] {$summary}\n{$url}",
+            "🟢 **{$user}** erstellt: [{$key}] {$summary}\n{$url}",
             str_contains($event, 'issue_updated') =>
-                "📝 **{$user}** aktualisiert: [{$key}] {$summary}\n{$url}",
+            "📝 **{$user}** aktualisiert: [{$key}] {$summary}\n{$url}",
             str_contains($event, 'issue_generic'), str_contains($event, 'comment') =>
-                "💬 **{$user}** kommentierte [{$key}] {$summary}",
+            "💬 **{$user}** kommentierte [{$key}] {$summary}",
             str_contains($event, 'issue_assigned') =>
-                "👤 [{$key}] {$summary} zugewiesen an **{$user}**",
+            "👤 [{$key}] {$summary} zugewiesen an **{$user}**",
             default => null,
         };
     }
@@ -262,7 +264,8 @@ final class IncomingWebhookController
     private function formatGitLabMR(array $p): ?string
     {
         $action = $p['object_attributes']['action'] ?? '';
-        if (!in_array($action, ['open', 'close', 'merge', 'reopen'], true)) return null;
+        if (!in_array($action, ['open', 'close', 'merge', 'reopen'], true))
+            return null;
         $mr = $p['object_attributes'] ?? [];
         $title = $mr['title'] ?? 'Untitled';
         $user = $p['user']['name'] ?? 'unknown';
@@ -274,7 +277,8 @@ final class IncomingWebhookController
     private function formatGitLabIssue(array $p): ?string
     {
         $action = $p['object_attributes']['action'] ?? '';
-        if (!in_array($action, ['open', 'close', 'reopen'], true)) return null;
+        if (!in_array($action, ['open', 'close', 'reopen'], true))
+            return null;
         $issue = $p['object_attributes'] ?? [];
         $title = $issue['title'] ?? 'Untitled';
         $user = $p['user']['name'] ?? 'unknown';
@@ -287,7 +291,8 @@ final class IncomingWebhookController
     {
         $attrs = $p['object_attributes'] ?? [];
         $status = $attrs['status'] ?? '';
-        if (!in_array($status, ['success', 'failed'], true)) return null;
+        if (!in_array($status, ['success', 'failed'], true))
+            return null;
         $project = $p['project']['path_with_namespace'] ?? 'unknown';
         $ref = $attrs['ref'] ?? 'unknown';
         $emoji = $status === 'success' ? '✅' : '❌';

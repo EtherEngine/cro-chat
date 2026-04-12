@@ -124,7 +124,7 @@ final class PushService
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
+        unset($ch); // replaces curl_close() which is deprecated in PHP 8.5+
 
         if ($curlError) {
             throw new \RuntimeException("cURL error: $curlError");
@@ -264,6 +264,9 @@ final class PushService
             'dm' => "Neue Nachricht von $actorName",
             'thread_reply' => "$actorName hat im Thread geantwortet",
             'reaction' => "$actorName hat reagiert",
+            'call_incoming' => "📞 Eingehender Anruf von $actorName",
+            'call_missed' => "📵 Verpasster Anruf von $actorName",
+            'call_rejected' => "🚫 $actorName hat den Anruf abgelehnt",
             default => "Neue Benachrichtigung",
         };
 
@@ -284,6 +287,7 @@ final class PushService
             'icon' => '/icons/icon-192.png',
             'badge' => '/icons/badge-72.png',
             'tag' => "notification-{$notification['id']}",
+            'requireInteraction' => in_array($type, ['call_incoming', 'call_missed'], true),
             'data' => [
                 'notification_id' => $notification['id'] ?? null,
                 'type' => $type,
@@ -291,6 +295,7 @@ final class PushService
                 'conversation_id' => $conversationId,
                 'message_id' => $messageId,
                 'thread_id' => $threadId,
+                'call_id' => $notification['data']['call_id'] ?? null,
                 'deep_link' => $deepLink,
             ],
         ];

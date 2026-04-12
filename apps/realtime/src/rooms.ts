@@ -70,6 +70,22 @@ export function getClient(ws: WebSocket): Client | undefined {
   return clients.get(ws);
 }
 
+/**
+ * Send a JSON payload to all connected sessions of a specific user.
+ * Returns true if at least one session received the message.
+ */
+export function sendToUser(userId: number, data: object): boolean {
+  const payload = JSON.stringify(data);
+  let delivered = false;
+  for (const client of clients.values()) {
+    if (client.userId === userId && client.ws.readyState === client.ws.OPEN) {
+      client.ws.send(payload);
+      delivered = true;
+    }
+  }
+  return delivered;
+}
+
 export function stats(): { clients: number; rooms: number } {
   return { clients: clients.size, rooms: rooms.size };
 }

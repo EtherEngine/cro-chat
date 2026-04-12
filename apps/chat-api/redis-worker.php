@@ -83,17 +83,24 @@ $handlers = [
     'knowledge.extract' => \App\Jobs\Handlers\KnowledgeExtractHandler::class,
     'linkpreview.unfurl' => \App\Jobs\Handlers\LinkUnfurlHandler::class,
     'task.reminders' => \App\Jobs\Handlers\TaskReminderHandler::class,
+    'call.reap_stale' => \App\Jobs\Handlers\StaleCallReaperHandler::class,
 ];
 
 $workerId = gethostname() . ':' . getmypid();
 $shouldStop = false;
 
-// Signal handlers for graceful shutdown
+// Signal handlers for graceful shutdown (pcntl not available on Windows)
+if (!defined('SIGTERM'))
+    define('SIGTERM', 15);
+if (!defined('SIGINT'))
+    define('SIGINT', 2);
 if (function_exists('pcntl_signal')) {
     pcntl_signal(SIGTERM, function () use (&$shouldStop) {
-        $shouldStop = true; });
+        $shouldStop = true;
+    });
     pcntl_signal(SIGINT, function () use (&$shouldStop) {
-        $shouldStop = true; });
+        $shouldStop = true;
+    });
 }
 
 $logEntry = fn(string $msg) => fwrite(STDERR, json_encode([

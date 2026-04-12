@@ -26,6 +26,7 @@ final class AbuseDetection
         'suspicious_request' => 20,
         'spam' => 15,
         'forbidden_access' => 20,
+        'call_spam' => 15,
     ];
 
     /** Record a violation & return updated score. */

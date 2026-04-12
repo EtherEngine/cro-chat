@@ -3,6 +3,14 @@ import { useApp } from '../../store';
 import { ChannelListItem } from './ChannelListItem';
 import { NewDmModal } from '../conversations/NewDmModal';
 import { NewChannelModal } from './NewChannelModal';
+import type { PresenceStatus } from '../../types';
+
+/** Human-readable label for call-related presence states. */
+const PRESENCE_LABELS: Partial<Record<PresenceStatus, string>> = {
+  ringing: 'Wird angerufen …',
+  in_call: 'Im Gespräch',
+  dnd: 'Nicht stören',
+};
 
 export function ChannelList() {
   const { state, dispatch } = useApp();
@@ -49,6 +57,8 @@ export function ChannelList() {
             .map((n) => n[0])
             .join('')
             .slice(0, 2);
+          const presence = state.presence[other.id] ?? other.status ?? 'offline';
+          const presenceLabel = PRESENCE_LABELS[presence];
           return (
             <li
               key={conv.id}
@@ -67,8 +77,12 @@ export function ChannelList() {
                 style={{ background: other.avatar_color }}
               >
                 {initials}
+                <span className={`presence-dot ${presence}`} />
               </div>
-              <span className="dm-name">{other.display_name}</span>
+              <div className="dm-label">
+                <span className="dm-name">{other.display_name}</span>
+                {presenceLabel && <span className="dm-presence-label">{presenceLabel}</span>}
+              </div>
               {(state.unread.conversations[conv.id] ?? 0) > 0 && (
                 <span className="unread-badge">
                   {state.unread.conversations[conv.id] > 99 ? '99+' : state.unread.conversations[conv.id]}

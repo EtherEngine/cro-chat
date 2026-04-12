@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useApp } from '../store';
 import { api } from '../api/client';
 import { RealtimeClient, type RealtimeEvent } from './socket';
-import type { Message } from '../types';
+import type { Message, PresenceStatus, AppNotification } from '../types';
 
 /** Singleton — shared across components via the hook. */
 let globalClient: RealtimeClient | null = null;
@@ -12,6 +12,16 @@ function getClient(): RealtimeClient {
     globalClient = new RealtimeClient();
   }
   return globalClient;
+}
+
+/** Export the singleton getter so other modules (useCall) can share it. */
+export function getSharedRealtimeClient(): RealtimeClient {
+  return getClient();
+}
+
+/** For testing only — inject a mock client instead of the real singleton. */
+export function setSharedRealtimeClient(client: RealtimeClient): void {
+  globalClient = client;
 }
 
 /**
@@ -101,6 +111,37 @@ export function useRealtime() {
           dispatch({ type: 'SET_UNREAD', unread });
         }).catch(() => {});
       }
+
+      // ── Instant presence updates from call-state changes ──
+      if (type === 'presence.changed') {
+        const p = payload as { user_id: number; status: PresenceStatus };
+        if (p.user_id && p.status) {
+          dispatch({ type: 'SET_PRESENCE', presence: { [p.user_id]: p.status } });
+        }
+      }
+
+      // ── Notifications (delivered to user:{id} room) ──
+      if (type === 'notification.created') {
+        const notif = payload as AppNotification;
+        dispatch({ type: 'ADD_NOTIFICATION', notification: notif });
+
+        // Browser notification for call events when tab is not focused
+        if (document.visibilityState !== 'visible' && 'Notification' in window && Notification.permission === 'granted') {
+          const callTypes = ['call_incoming', 'call_missed', 'call_rejected'];
+          if (callTypes.includes(notif.type)) {
+            const titles: Record<string, string> = {
+              call_incoming: `📞 Eingehender Anruf von ${notif.actor.display_name}`,
+              call_missed: `📵 Verpasster Anruf von ${notif.actor.display_name}`,
+              call_rejected: `🚫 ${notif.actor.display_name} hat den Anruf abgelehnt`,
+            };
+            new Notification(titles[notif.type] ?? 'Anruf', {
+              icon: '/icons/icon-192.png',
+              tag: `call-notif-${notif.id}`,
+              requireInteraction: notif.type === 'call_incoming',
+            });
+          }
+        }
+      }
     },
     [activeChannelId, activeConversationId, dispatch],
   );
@@ -116,6 +157,16 @@ export function useRealtime() {
     const client = getClient();
     const rooms: string[] = [];
 
+    // Subscribe to the space room for presence broadcasts
+    if (state.spaceId) {
+      rooms.push(`space:${state.spaceId}`);
+    }
+
+    // Subscribe to user-scoped room for notifications
+    if (state.user?.id) {
+      rooms.push(`user:${state.user.id}`);
+    }
+
     if (activeChannelId) {
       rooms.push(`channel:${activeChannelId}`);
     }
@@ -124,7 +175,7 @@ export function useRealtime() {
     }
 
     client.setSubscriptions(rooms);
-  }, [activeChannelId, activeConversationId]);
+  }, [state.spaceId, state.user?.id, activeChannelId, activeConversationId]);
 
   // ── Delta resync after reconnect ──
   // When the WebSocket reconnects, fetch any messages that were missed.

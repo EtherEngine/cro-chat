@@ -144,10 +144,11 @@ final class MessageService
         int $userId,
         ?int $before = null,
         ?int $after = null,
-        int $limit = 50
+        int $limit = 50,
+        ?string $type = null
     ): array {
         self::requireConversationMember($conversationId, $userId);
-        return MessageRepository::forConversation($conversationId, $before, $after, $limit);
+        return MessageRepository::forConversation($conversationId, $before, $after, $limit, $type);
     }
 
     public static function createConversation(

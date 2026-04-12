@@ -17,9 +17,12 @@ final class MessageRepository
     private static function hydrate(array $row, array $attachmentMap = [], array $reactionMap = [], array $mentionMap = []): array
     {
         $id = (int) $row['id'];
+        $type = $row['type'] ?? 'text';
         $msg = [
             'id' => $id,
+            'type' => $type,
             'body' => $row['body'],
+            'call_id' => isset($row['call_id']) && $row['call_id'] !== null ? (int) $row['call_id'] : null,
             'user_id' => (int) $row['user_id'],
             'channel_id' => $row['channel_id'] ? (int) $row['channel_id'] : null,
             'conversation_id' => $row['conversation_id'] ? (int) $row['conversation_id'] : null,
@@ -43,6 +46,12 @@ final class MessageRepository
                 'reply_count' => (int) $row['thread_reply_count'],
                 'last_reply_at' => $row['thread_last_reply_at'],
             ];
+        }
+
+        // Decode call metadata from body JSON for call messages
+        if ($type === 'call' && $msg['body'] !== null) {
+            $decoded = json_decode($msg['body'], true);
+            $msg['call_meta'] = is_array($decoded) ? $decoded : null;
         }
 
         // Omit body for soft-deleted messages
@@ -104,7 +113,7 @@ final class MessageRepository
     private static function baseSelect(): string
     {
         return '
-            SELECT m.id, m.body, m.user_id, m.channel_id, m.conversation_id,
+            SELECT m.id, m.body, m.type, m.call_id, m.user_id, m.channel_id, m.conversation_id,
                    m.reply_to_id, m.thread_id, m.edited_at, m.deleted_at, m.created_at,
                    u.display_name, u.avatar_color, u.title AS user_title,
                    t.id AS thread_summary_id, t.reply_count AS thread_reply_count,
@@ -167,11 +176,20 @@ final class MessageRepository
         int $conversationId,
         ?int $before = null,
         ?int $after = null,
-        int $limit = self::PAGE_SIZE
+        int $limit = self::PAGE_SIZE,
+        ?string $type = null
     ): array {
+        $where = 'm.conversation_id = ? AND m.thread_id IS NULL';
+        $params = [$conversationId];
+
+        if ($type !== null) {
+            $where .= ' AND m.type = ?';
+            $params[] = $type;
+        }
+
         return self::cursorQuery(
-            'm.conversation_id = ? AND m.thread_id IS NULL',
-            [$conversationId],
+            $where,
+            $params,
             $before,
             $after,
             $limit
@@ -285,6 +303,31 @@ final class MessageRepository
              VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([$body, $userId, $channelId, $conversationId, $replyToId, $threadId, $idempotencyKey]);
+        return self::find((int) $db->lastInsertId());
+    }
+
+    /**
+     * Create a call-event message in a conversation timeline.
+     * Body stores JSON metadata; idempotent via call_id unique guard.
+     */
+    public static function createCallMessage(int $userId, int $conversationId, int $callId, array $meta): array
+    {
+        $db = Database::connection();
+
+        // Idempotency: one call message per call
+        $stmt = $db->prepare('SELECT id FROM messages WHERE call_id = ? AND type = ?');
+        $stmt->execute([$callId, 'call']);
+        $existing = $stmt->fetch();
+        if ($existing) {
+            return self::find((int) $existing['id']);
+        }
+
+        $body = json_encode($meta, JSON_UNESCAPED_UNICODE);
+        $stmt = $db->prepare(
+            'INSERT INTO messages (body, type, call_id, user_id, channel_id, conversation_id)
+             VALUES (?, ?, ?, ?, NULL, ?)'
+        );
+        $stmt->execute([$body, 'call', $callId, $userId, $conversationId]);
         return self::find((int) $db->lastInsertId());
     }
 

@@ -47,9 +47,9 @@ class ApiException extends \RuntimeException
         return new static($message, 422, 'VALIDATION_ERROR', $errorsOrCode ?: $errors);
     }
 
-    public static function conflict(string $message = 'Konflikt', string $code = 'CONFLICT'): static
+    public static function conflict(string $message = 'Konflikt', string $code = 'CONFLICT', ?array $errors = null): static
     {
-        return new static($message, 409, $code);
+        return new static($message, 409, $code, $errors);
     }
 
     public static function internal(string $message = 'Interner Fehler', string $code = 'INTERNAL_ERROR'): static

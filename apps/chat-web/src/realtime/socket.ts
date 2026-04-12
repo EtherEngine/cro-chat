@@ -264,6 +264,16 @@ export class RealtimeClient {
     this.connect();
   }
 
+  /**
+   * Send an arbitrary JSON message to the server.
+   * Returns true if the message was sent, false if not connected.
+   */
+  send(data: Record<string, unknown>): boolean {
+    if (!this.connected || !this.ws) return false;
+    this.ws.send(JSON.stringify(data));
+    return true;
+  }
+
   private sendSubscribe(room: string): void {
     this.ws?.send(JSON.stringify({ action: 'subscribe', room }));
   }

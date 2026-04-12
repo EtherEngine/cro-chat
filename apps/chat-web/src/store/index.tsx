@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
-import type { User, Channel, Message, Conversation, PresenceMap, UnreadCounts } from '../types';
+import type { User, Channel, Message, Conversation, PresenceMap, UnreadCounts, AppNotification } from '../types';
 
 type State = {
   user: User | null;
@@ -15,6 +15,8 @@ type State = {
   unread: UnreadCounts;
   showMembers: boolean;
   jumpToMessageId: number | null;
+  notifications: AppNotification[];
+  notificationUnread: number;
 };
 
 type Action =
@@ -37,7 +39,11 @@ type Action =
   | { type: 'TOGGLE_MEMBERS' }
   | { type: 'CLOSE_MEMBERS' }
   | { type: 'JUMP_TO_MESSAGE'; messageId: number }
-  | { type: 'CLEAR_JUMP' };
+  | { type: 'CLEAR_JUMP' }
+  | { type: 'SET_NOTIFICATIONS'; notifications: AppNotification[] }
+  | { type: 'ADD_NOTIFICATION'; notification: AppNotification }
+  | { type: 'SET_NOTIFICATION_UNREAD'; count: number }
+  | { type: 'MARK_NOTIFICATION_READ'; notificationId: number };
 
 const initialState: State = {
   user: null,
@@ -53,6 +59,8 @@ const initialState: State = {
   unread: { channels: {}, conversations: {} },
   showMembers: true,
   jumpToMessageId: null,
+  notifications: [],
+  notificationUnread: 0,
 };
 
 function mergeMessages(existing: Message[], incoming: Message[]): Message[] {
@@ -116,6 +124,24 @@ function reducer(state: State, action: Action): State {
       return { ...state, jumpToMessageId: action.messageId };
     case 'CLEAR_JUMP':
       return { ...state, jumpToMessageId: null };
+    case 'SET_NOTIFICATIONS':
+      return { ...state, notifications: action.notifications };
+    case 'ADD_NOTIFICATION':
+      return {
+        ...state,
+        notifications: [action.notification, ...state.notifications],
+        notificationUnread: state.notificationUnread + (action.notification.read_at ? 0 : 1),
+      };
+    case 'SET_NOTIFICATION_UNREAD':
+      return { ...state, notificationUnread: action.count };
+    case 'MARK_NOTIFICATION_READ':
+      return {
+        ...state,
+        notifications: state.notifications.map((n) =>
+          n.id === action.notificationId ? { ...n, read_at: new Date().toISOString() } : n
+        ),
+        notificationUnread: Math.max(0, state.notificationUnread - 1),
+      };
     default:
       return state;
   }

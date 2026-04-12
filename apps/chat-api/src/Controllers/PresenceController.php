@@ -27,4 +27,18 @@ final class PresenceController
         $statuses = PresenceService::statusMap($userId);
         Response::json(['statuses' => $statuses]);
     }
+
+    public function setDnd(): void
+    {
+        $userId = Request::requireUserId();
+        PresenceService::setDnd($userId);
+        Response::json(['ok' => true, 'status' => 'dnd']);
+    }
+
+    public function clearDnd(): void
+    {
+        $userId = Request::requireUserId();
+        PresenceService::clearDnd($userId);
+        Response::json(['ok' => true, 'status' => 'online']);
+    }
 }

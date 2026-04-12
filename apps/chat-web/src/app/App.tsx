@@ -5,6 +5,10 @@ import { ChatPage } from '../pages/ChatPage';
 import { api } from '../api/client';
 import { applyVisualSettings } from '../components/settings/SettingsModal';
 import { usePWA, useDeepLinks } from '../hooks/usePWA';
+import { CallProvider } from '../features/calls/CallProvider';
+import { CallOverlay } from '../components/calls/CallOverlay';
+import { CallDebugPanel } from '../components/calls/CallDebugPanel';
+import { CallSimulatorPanel } from '../features/calls/dev/CallSimulatorPanel';
 import './App.css';
 
 // Apply saved visual settings on startup (before first render)
@@ -38,7 +42,12 @@ function AppInner() {
           {outboxCount > 0 && <span> ({outboxCount} ausstehend)</span>}
         </div>
       )}
-      <ChatPage />
+      <CallProvider userId={state.user!.id}>
+        <CallOverlay />
+        <CallDebugPanel />
+        <CallSimulatorPanel />
+        <ChatPage />
+      </CallProvider>
     </>
   );
 }

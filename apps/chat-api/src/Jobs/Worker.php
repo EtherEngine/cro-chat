@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Jobs\Handlers\AiEmbedHandler;
 use App\Jobs\Handlers\AiExtractHandler;
+use App\Jobs\Handlers\StaleCallReaperHandler;
 use App\Jobs\Handlers\AiSummarizeChannelHandler;
 use App\Jobs\Handlers\AiSummarizeThreadHandler;
 use App\Jobs\Handlers\AttachmentProcessHandler;
@@ -61,6 +62,7 @@ final class Worker
         'ai.summarize_channel' => AiSummarizeChannelHandler::class,
         'ai.extract' => AiExtractHandler::class,
         'ai.embed' => AiEmbedHandler::class,
+        'call.reap_stale' => StaleCallReaperHandler::class,
     ];
 
     private string $workerId;
@@ -80,6 +82,11 @@ final class Worker
      */
     public function registerSignals(): void
     {
+        // pcntl not available on Windows; define fallback constants so linters don't complain
+        if (!defined('SIGTERM'))
+            define('SIGTERM', 15);
+        if (!defined('SIGINT'))
+            define('SIGINT', 2);
         if (function_exists('pcntl_signal')) {
             pcntl_signal(SIGTERM, fn() => $this->shouldStop = true);
             pcntl_signal(SIGINT, fn() => $this->shouldStop = true);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Repositories\AnalyticsRepository;
 use App\Services\AnalyticsService;
 use App\Support\Request;
 use App\Support\Response;
@@ -185,5 +186,21 @@ final class AnalyticsController
             'product' => AnalyticsService::getProductEventTypes(),
             'system' => AnalyticsService::getSystemEventTypes(),
         ]);
+    }
+
+    /**
+     * GET /api/spaces/{spaceId}/analytics/calls
+     * Call metrics: totals, answer rate, durations, daily timeseries.
+     */
+    public function callMetrics(array $params): void
+    {
+        Request::requireUserId();
+        $spaceId = (int) $params['spaceId'];
+        $days = (int) (Request::query('days') ?? 30);
+        $days = max(1, min($days, 365));
+
+        $metrics = AnalyticsRepository::callMetrics($spaceId, $days);
+
+        Response::json($metrics);
     }
 }

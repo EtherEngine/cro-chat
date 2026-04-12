@@ -34,6 +34,19 @@ final class JobController
 
         $dispatched = [];
 
+        // Stale call reaper — runs every minute, idempotency key prevents pile-up
+        $job = JobService::dispatch(
+            'call.reap_stale',
+            [],
+            'maintenance',
+            1,
+            100,
+            'call-reap-stale-' . date('Y-m-d-H-i')
+        );
+        if ($job) {
+            $dispatched[] = 'call.reap_stale';
+        }
+
         // Presence cleanup (idempotent — safe to dispatch frequently)
         $job = JobService::dispatch(
             'presence.cleanup',

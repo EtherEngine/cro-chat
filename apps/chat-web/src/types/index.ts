@@ -4,7 +4,7 @@ export type User = {
   display_name: string;
   title: string;
   avatar_color: string;
-  status: 'online' | 'away' | 'offline';
+  status: PresenceStatus;
   last_seen_at: string | null;
 };
 
@@ -27,9 +27,24 @@ export type Attachment = {
   created_at: string;
 };
 
+export type CallMeta = {
+  call_id: number;
+  status: CallStatus;
+  end_reason: CallEndReason | null;
+  duration_seconds: number | null;
+  caller_user_id: number;
+  callee_user_id: number;
+  started_at: string | null;
+  answered_at: string | null;
+  ended_at: string | null;
+};
+
 export type Message = {
   id: number;
+  type: 'text' | 'call';
   body: string | null;
+  call_id: number | null;
+  call_meta?: CallMeta | null;
   user_id: number;
   channel_id: number | null;
   conversation_id: number | null;
@@ -80,7 +95,9 @@ export type CursorPage<T> = {
   has_more: boolean;
 };
 
-export type PresenceMap = Record<number, 'online' | 'away' | 'offline'>;
+export type PresenceStatus = 'online' | 'away' | 'offline' | 'ringing' | 'in_call' | 'dnd';
+
+export type PresenceMap = Record<number, PresenceStatus>;
 
 export type UnreadCounts = {
   channels: Record<number, number>;
@@ -128,4 +145,97 @@ export type SavedMessage = {
   saved_id: number;
   saved_at: string;
   message: Message & { context: string | null };
+};
+
+// ── Audio Calls (1:1 WebRTC) ────────────────────────────────
+
+export type CallStatus =
+  | 'initiated'
+  | 'ringing'
+  | 'accepted'
+  | 'rejected'
+  | 'ended'
+  | 'missed'
+  | 'failed';
+
+export type CallEndReason =
+  | 'hangup'
+  | 'timeout'
+  | 'network_error'
+  | 'ice_failed'
+  | 'rejected'
+  | 'caller_cancelled'
+  | 'busy';
+
+export type CallSessionRole = 'caller' | 'callee';
+
+export type Call = {
+  id: number;
+  conversation_id: number;
+  caller_user_id: number;
+  callee_user_id: number;
+  status: CallStatus;
+  started_at: string;
+  answered_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  end_reason: CallEndReason | null;
+  created_at: string;
+  caller?: Pick<User, 'id' | 'display_name' | 'avatar_color'>;
+  callee?: Pick<User, 'id' | 'display_name' | 'avatar_color'>;
+};
+
+export type CallSession = {
+  id: number;
+  call_id: number;
+  user_id: number;
+  role: CallSessionRole;
+  joined_at: string | null;
+  left_at: string | null;
+  muted: boolean;
+  ice_state: string | null;
+  created_at: string;
+};
+
+/** ICE server entry as returned by the backend / consumed by RTCPeerConnection. */
+export type IceServer = {
+  urls: string;
+  username?: string;
+  credential?: string;
+};
+
+/** Response from GET /api/calls/ice-servers. */
+export type IceServerConfig = {
+  ice_servers: IceServer[];
+  ice_transport_policy: RTCIceTransportPolicy;
+};
+
+// ── Notifications ──────────────────────────────────────
+
+export type NotificationType =
+  | 'mention'
+  | 'dm'
+  | 'thread_reply'
+  | 'reaction'
+  | 'call_incoming'
+  | 'call_missed'
+  | 'call_rejected';
+
+export type AppNotification = {
+  id: number;
+  user_id: number;
+  space_id: number;
+  type: NotificationType;
+  actor: {
+    id: number;
+    display_name: string;
+    avatar_color: string;
+  };
+  message_id: number | null;
+  channel_id: number | null;
+  conversation_id: number | null;
+  thread_id: number | null;
+  data: Record<string, unknown> | null;
+  read_at: string | null;
+  created_at: string;
 };

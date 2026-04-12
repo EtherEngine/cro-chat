@@ -57,13 +57,18 @@ final class MessageController
         $before = Request::query('before') ? (int) Request::query('before') : null;
         $after = Request::query('after') ? (int) Request::query('after') : null;
         $limit = Request::query('limit') ? (int) Request::query('limit') : 50;
+        $type = Request::query('type');
+        if ($type !== null && !in_array($type, ['text', 'call'], true)) {
+            $type = null;
+        }
 
         $result = MessageService::listConversation(
             (int) $params['conversationId'],
             $userId,
             $before,
             $after,
-            $limit
+            $limit,
+            $type
         );
         Response::json($result);
     }

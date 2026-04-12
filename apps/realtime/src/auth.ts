@@ -71,4 +71,15 @@ export async function isSpaceMemberForChannel(channelId: number, userId: number)
   return (rows as any[]).length > 0;
 }
 
+/**
+ * Check if a user is a direct member of a space.
+ */
+export async function isSpaceMember(spaceId: number, userId: number): Promise<boolean> {
+  const [rows] = await db().execute<mysql.RowDataPacket[]>(
+    'SELECT 1 FROM space_members WHERE space_id = ? AND user_id = ? LIMIT 1',
+    [spaceId, userId],
+  );
+  return (rows as any[]).length > 0;
+}
+
 import type mysql from 'mysql2/promise';

@@ -37,6 +37,13 @@ final class AnalyticsService
         'task.completed',
         'draft.published',
         'snippet.created',
+        // ── Call events ──
+        'call.initiated',
+        'call.accepted',
+        'call.rejected',
+        'call.missed',
+        'call.ended',
+        'call.failed',
     ];
 
     private const SYSTEM_EVENTS = [
@@ -47,6 +54,9 @@ final class AnalyticsService
         'api.rate_limited',
         'push.sent',
         'push.failed',
+        // ── Call system events ──
+        'call.setup_failure',
+        'call.signaling_error',
     ];
 
     // ── Track Events ─────────────────────────────

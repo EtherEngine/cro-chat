@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../../store';
+import { CallMessage } from './CallMessage';
 import { MessageItem } from './MessageItem';
 
 export function MessageList() {
@@ -45,7 +46,11 @@ export function MessageList() {
     <div className="message-list">
       {state.messages.map((msg) => (
         <div key={msg.id} ref={(el) => setRef(msg.id, el)}>
-          <MessageItem message={msg} />
+          {msg.type === 'call' ? (
+            <CallMessage message={msg} />
+          ) : (
+            <MessageItem message={msg} />
+          )}
         </div>
       ))}
       <div ref={endRef} />

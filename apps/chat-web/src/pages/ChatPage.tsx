@@ -29,6 +29,13 @@ export function ChatPage() {
     api.unread.counts().then((unread) => {
       dispatch({ type: 'SET_UNREAD', unread });
     }).catch(() => {});
+    // Initial notifications fetch
+    api.notifications.list({ limit: 30 }).then(({ notifications }) => {
+      dispatch({ type: 'SET_NOTIFICATIONS', notifications });
+    }).catch(() => {});
+    api.notifications.unreadCount().then(({ count }) => {
+      dispatch({ type: 'SET_NOTIFICATION_UNREAD', count });
+    }).catch(() => {});
   }, [dispatch]);
 
   // ── Initial message + member load when active channel changes ──

@@ -353,6 +353,135 @@ final class AnalyticsRepository
             'mau' => $mau,
             'messages_sent' => $messagesSent,
             'channels_active' => $channelsActive,
+            'call_attempts' => self::callCountForDate($spaceId, $date, null),
+            'answered_calls' => self::callCountForDate($spaceId, $date, 'accepted'),
+            'missed_calls' => self::callCountForDate($spaceId, $date, 'missed'),
+            'rejected_calls' => self::callCountForDate($spaceId, $date, 'rejected'),
+            'failed_calls' => self::callCountForDate($spaceId, $date, 'failed'),
+            'avg_call_duration' => self::avgCallDurationForDate($spaceId, $date),
+        ];
+    }
+
+    // ── Call-specific metrics ────────────────────
+
+    /**
+     * Count calls for a date, optionally filtered by final status that was accepted (answered).
+     */
+    private static function callCountForDate(int $spaceId, string $date, ?string $status): int
+    {
+        $sql = '
+            SELECT COUNT(*) AS cnt FROM calls c
+            JOIN conversations cv ON cv.id = c.conversation_id
+            WHERE DATE(c.started_at) = ? AND cv.space_id = ?
+        ';
+        $params = [$date, $spaceId];
+        if ($status !== null) {
+            // For 'accepted' we look for calls that reached accepted status (ended calls that were answered)
+            if ($status === 'accepted') {
+                $sql .= ' AND c.answered_at IS NOT NULL';
+            } else {
+                $sql .= ' AND c.status = ?';
+                $params[] = $status;
+            }
+        }
+        $stmt = Database::connection()->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetch()['cnt'];
+    }
+
+    /**
+     * Average call duration in seconds for answered calls on a given date.
+     */
+    private static function avgCallDurationForDate(int $spaceId, string $date): float
+    {
+        $stmt = Database::connection()->prepare('
+            SELECT COALESCE(AVG(c.duration_seconds), 0) AS avg_dur FROM calls c
+            JOIN conversations cv ON cv.id = c.conversation_id
+            WHERE DATE(c.started_at) = ? AND cv.space_id = ?
+              AND c.duration_seconds IS NOT NULL
+        ');
+        $stmt->execute([$date, $spaceId]);
+        return round((float) $stmt->fetch()['avg_dur'], 1);
+    }
+
+    /**
+     * Comprehensive call metrics for a space over $days days.
+     * Used by the call-stats analytics endpoint.
+     *
+     * @return array{
+     *   total_calls: int,
+     *   answered_calls: int,
+     *   missed_calls: int,
+     *   rejected_calls: int,
+     *   failed_calls: int,
+     *   answer_rate: float,
+     *   avg_duration_seconds: float,
+     *   max_duration_seconds: int,
+     *   daily: list<array>
+     * }
+     */
+    public static function callMetrics(int $spaceId, int $days = 30): array
+    {
+        $db = Database::connection();
+
+        // Totals
+        $stmt = $db->prepare('
+            SELECT
+                COUNT(*)                                            AS total,
+                SUM(c.answered_at IS NOT NULL)                      AS answered,
+                SUM(c.status = "missed")                            AS missed,
+                SUM(c.status = "rejected")                          AS rejected,
+                SUM(c.status = "failed")                            AS failed,
+                COALESCE(AVG(c.duration_seconds), 0)                AS avg_dur,
+                COALESCE(MAX(c.duration_seconds), 0)                AS max_dur
+            FROM calls c
+            JOIN conversations cv ON cv.id = c.conversation_id
+            WHERE cv.space_id = ?
+              AND c.started_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+        ');
+        $stmt->execute([$spaceId, $days]);
+        $row = $stmt->fetch();
+
+        $total = (int) $row['total'];
+        $answered = (int) $row['answered'];
+        $missed = (int) $row['missed'];
+        $rejected = (int) $row['rejected'];
+        $failed = (int) $row['failed'];
+
+        // Daily timeseries
+        $stmt = $db->prepare('
+            SELECT
+                DATE(c.started_at) AS day,
+                COUNT(*)                                AS total,
+                SUM(c.answered_at IS NOT NULL)          AS answered,
+                SUM(c.status = "missed")                AS missed,
+                COALESCE(AVG(c.duration_seconds), 0)    AS avg_dur
+            FROM calls c
+            JOIN conversations cv ON cv.id = c.conversation_id
+            WHERE cv.space_id = ?
+              AND c.started_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            GROUP BY DATE(c.started_at)
+            ORDER BY day
+        ');
+        $stmt->execute([$spaceId, $days]);
+        $daily = array_map(fn(array $r) => [
+            'date' => $r['day'],
+            'total_calls' => (int) $r['total'],
+            'answered_calls' => (int) $r['answered'],
+            'missed_calls' => (int) $r['missed'],
+            'avg_duration' => round((float) $r['avg_dur'], 1),
+        ], $stmt->fetchAll());
+
+        return [
+            'total_calls' => $total,
+            'answered_calls' => $answered,
+            'missed_calls' => $missed,
+            'rejected_calls' => $rejected,
+            'failed_calls' => $failed,
+            'answer_rate' => $total > 0 ? round($answered / $total * 100, 1) : 0.0,
+            'avg_duration_seconds' => round((float) $row['avg_dur'], 1),
+            'max_duration_seconds' => (int) $row['max_dur'],
+            'daily' => $daily,
         ];
     }
 

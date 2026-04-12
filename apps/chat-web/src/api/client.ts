@@ -1,4 +1,4 @@
-import type { User, Channel, Message, Conversation, CursorPage, PresenceMap, UnreadCounts, KeyBundle, ConversationKey, Attachment, SearchResults, SearchFilters, PinnedMessage, SavedMessage } from '../types';
+import type { User, Channel, Message, Conversation, CursorPage, PresenceMap, UnreadCounts, KeyBundle, ConversationKey, Attachment, SearchResults, SearchFilters, PinnedMessage, SavedMessage, Call, CallSession, IceServerConfig, AppNotification } from '../types';
 
 const API_BASE = 'http://localhost/chat-api/public';
 
@@ -115,7 +115,43 @@ export type SyncResponse = {
   events: SyncEvent[]; cursor: number; has_more: boolean;
 };
 
+export type CallAnalytics = {
+  total_calls: number;
+  answered_calls: number;
+  missed_calls: number;
+  rejected_calls: number;
+  failed_calls: number;
+  answer_rate: number;
+  avg_duration_seconds: number;
+  max_duration_seconds: number;
+  daily: { date: string; total_calls: number; answered_calls: number; missed_calls: number; avg_duration: number }[];
+};
+
+export type CallHealth = {
+  status: string;
+  active_calls: Record<string, number>;
+  stale_ringing: number;
+  recent_failures: number;
+  signaling_errors: number;
+};
+
 let csrfToken = '';
+
+/**
+ * Structured API error that preserves the error code and extra data
+ * from the backend JSON response (e.g. `{ error, message, errors }`).
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly status: number,
+    public readonly errors?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -139,7 +175,14 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Request failed');
+  if (!res.ok) {
+    throw new ApiError(
+      data.message || 'Request failed',
+      data.error || 'UNKNOWN',
+      res.status,
+      data.errors,
+    );
+  }
   return data;
 }
 
@@ -371,6 +414,10 @@ export const api = {
       request<{ ok: boolean }>('/api/presence/heartbeat', { method: 'POST' }),
     status: () =>
       request<{ statuses: PresenceMap }>('/api/presence/status'),
+    setDnd: () =>
+      request<{ ok: boolean; status: string }>('/api/presence/dnd', { method: 'POST' }),
+    clearDnd: () =>
+      request<{ ok: boolean; status: string }>('/api/presence/dnd', { method: 'DELETE' }),
   },
 
   unread: {
@@ -476,7 +523,7 @@ export const api = {
       if (params?.before) qs.set('before', String(params.before));
       if (params?.limit) qs.set('limit', String(params.limit));
       const q = qs.toString();
-      return request<{ notifications: Notification[]; next_cursor: number | null; has_more: boolean }>(`/api/notifications${q ? '?' + q : ''}`);
+      return request<{ notifications: AppNotification[]; next_cursor: number | null; has_more: boolean }>(`/api/notifications${q ? '?' + q : ''}`);
     },
     unreadCount: () =>
       request<{ count: number }>('/api/notifications/unread-count'),
@@ -484,5 +531,63 @@ export const api = {
       request<{ ok: boolean }>(`/api/notifications/${notificationId}/read`, { method: 'POST' }),
     markAllRead: () =>
       request<{ ok: boolean }>('/api/notifications/read-all', { method: 'POST' }),
+  },
+
+  calls: {
+    initiate: (conversationId: number) =>
+      request<{ call: Call }>('/api/calls', {
+        method: 'POST',
+        body: JSON.stringify({ conversation_id: conversationId }),
+      }),
+    show: (callId: number) =>
+      request<{ call: Call & { sessions: CallSession[] } }>(`/api/calls/${callId}`),
+    accept: (callId: number) =>
+      request<{ call: Call }>(`/api/calls/${callId}/accept`, { method: 'POST' }),
+    reject: (callId: number) =>
+      request<{ call: Call }>(`/api/calls/${callId}/reject`, { method: 'POST' }),
+    cancel: (callId: number) =>
+      request<{ call: Call }>(`/api/calls/${callId}/cancel`, { method: 'POST' }),
+    hangup: (callId: number) =>
+      request<{ call: Call }>(`/api/calls/${callId}/hangup`, { method: 'POST' }),
+    active: (conversationId: number) =>
+      request<{ call: (Call & { sessions: CallSession[] }) | null }>(`/api/conversations/${conversationId}/calls/active`),
+    history: (conversationId: number, params?: { limit?: number; offset?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.limit) qs.set('limit', String(params.limit));
+      if (params?.offset) qs.set('offset', String(params.offset));
+      const q = qs.toString();
+      return request<{ calls: Call[] }>(`/api/conversations/${conversationId}/calls${q ? '?' + q : ''}`);
+    },
+    iceServers: () =>
+      request<IceServerConfig>('/api/calls/ice-servers'),
+  },
+
+  analytics: {
+    callMetrics: (spaceId: number, days = 30) =>
+      request<CallAnalytics>(`/api/spaces/${spaceId}/analytics/calls?days=${days}`),
+  },
+
+  health: {
+    live: () => request<{ status: string }>('/health/live'),
+    ready: () => request<{ status: string; db: string; query_count: number }>('/health/ready'),
+    calls: () => request<CallHealth>('/health/calls'),
+  },
+
+  // ── Dev-only (APP_ENV=local backend guard + import.meta.env.DEV) ─────────
+  dev: {
+    scenarios: () =>
+      request<{ scenarios: Array<{ id: string; label: string; description: string; bot_actions: string[] }> }>(
+        '/api/dev/calls/scenarios',
+      ),
+    simulateCall: (body: { scenario: string; target_user_id?: number }) =>
+      request<{ call: Call; bot_user_id: number; bot_display_name: string; scenario: string }>(
+        '/api/dev/calls/simulate',
+        { method: 'POST', body: JSON.stringify(body) },
+      ),
+    botCallAction: (callId: number, action: string) =>
+      request<{ call: Call }>(`/api/dev/calls/${callId}/bot-action`, {
+        method: 'POST',
+        body: JSON.stringify({ action }),
+      }),
   },
 };
