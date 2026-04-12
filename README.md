@@ -1,4 +1,4 @@
-# crø
+﻿# crø
 
 Chat-Anwendung – PHP-Backend, React-Frontend, MariaDB.
 
@@ -80,12 +80,12 @@ scripts/
 
 **Stack:** PHP 8.2, Custom-Framework (Router, Request/Response, Middleware-Pipeline), PSR-4 Autoloading, kein externes Framework.
 
-| Schicht    | Anzahl | Beispiele                                                                                                                                                                                                                                                           |
-| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Controller | 25     | Auth, Channel, Message, Conversation, Presence, Search, Attachment, Key, ReadReceipt, Space, User, Reaction, Pin, SavedMessage, Thread, Mention, Notification, Moderation, Job, Compliance, Device, RichContent, Analytics, Scaling, Security, Ai                   |
-| Service    | 26     | Auth, Channel, Message, Notification, Mention, Reaction, Thread, Attachment, Presence, Role, Moderation, Job, Compliance, Push, RichContent, Search, Analytics, Scaling, MFA, SSO, DeviceTracker, AbuseDetection, SessionManager, SecretManager, SecurityLogger, Ai |
-| Repository | 18     | Message, Search, Key, Channel, Conversation, User, Space, Event, Notification, Thread, Moderation, Job, Compliance, Device, RichContent, Analytics, Ai, …                                                                                                           |
-| Middleware | 4      | Auth, CSRF, CORS, RateLimit                                                                                                                                                                                                                                         |
+| Schicht    | Anzahl | Beispiele                                                                                                                                                                                                                                                                  |
+| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Controller | 27     | Auth, Channel, Message, Conversation, Presence, Search, Attachment, Key, ReadReceipt, Space, User, Reaction, Pin, SavedMessage, Thread, Mention, Notification, Moderation, Job, Compliance, Device, RichContent, Analytics, Scaling, Security, Ai, **Call**                |
+| Service    | 28     | Auth, Channel, Message, Notification, Mention, Reaction, Thread, Attachment, Presence, Role, Moderation, Job, Compliance, Push, RichContent, Search, Analytics, Scaling, MFA, SSO, DeviceTracker, AbuseDetection, SessionManager, SecretManager, SecurityLogger, Ai, **Call**, **DevCall** |
+| Repository | 19     | Message, Search, Key, Channel, Conversation, User, Space, Event, Notification, Thread, Moderation, Job, Compliance, Device, RichContent, Analytics, Ai, **Call**, …                                                                                                        |
+| Middleware | 4      | Auth, CSRF, CORS, RateLimit                                                                                                                                                                                                                                                |
 
 ### Sicherheit
 
@@ -333,6 +333,33 @@ KI-gestützte Funktionen mit austauschbarem Provider, asynchroner Verarbeitung u
 | `ai_jobs`            | job_type, scope_type, scope_id, last_cursor, next_run_at (Cursor-Tracking)   |
 | `ai_provider_config` | space_id (UNIQUE), provider, model, api_key_enc, is_enabled, settings JSON   |
 
+### 1:1 Audio-Calls (WebRTC)
+
+Echtzeit-Sprachanrufe zwischen zwei Nutzern, vollständig integriert in das bestehende Realtime- und Messaging-System.
+
+- **Signaling** – Offer/Answer/ICE-Candidate-Austausch über bestehenden WebSocket-Gateway (`user:{id}`-Rooms)
+- **Call-Lifecycle** – `initiating → ringing-outgoing/ringing-incoming → connecting → active → ending → idle`
+- **ICE/STUN** – Browser-native WebRTC mit konfigurierbarem STUN-Server
+- **Audio-Geräte** – Mikrofon-Auswahl, Lautstärke-Anzeige, Mute/Unmute, Geräte wechseln während des Anrufs
+- **Anruf-History** – Alle Anrufe mit Dauer und Ergebnis persistent gespeichert, im Chat-Header abrufbar
+- **Push-Events** – `call.ringing`, `call.accepted`, `call.ended`, `call.rejected`, `call.failed`, `webrtc.offer/answer/ice`
+- **Glare-Handling** – Gleichzeitige Anruf-Initiierung per Tie-Breaking (niedrigere `user_id` gewinnt)
+- **Concurrency** – Race-Condition-sichere DB-Locks, doppelte Ringing-Events werden ignoriert
+- **Call Overlay** – Globale UI-Schicht über der gesamten App (klingeln, verbinden, aktiver Anruf, Fehler)
+- **Dev-Simulator** – Floating Panel (`VITE_CALL_SIMULATION=true`) simuliert eingehende Anrufe ohne echtes Mikrofon
+
+| Datenmodell      | Felder                                                                           |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `calls`          | status, caller/callee user_id, conversation_id, started_at, duration_seconds, end_reason |
+| `call_history`   | View/Tabelle mit formatierten Anruf-Einträgen pro Conversation                   |
+| `call_presence`  | Echtzeit-Verfügbarkeit (available/in_call/unavailable) pro User                  |
+
+```powershell
+# Simulation aktivieren (kein Mikrofon nötig)
+# In apps/chat-web/.env.local:
+VITE_CALL_SIMULATION=true
+```
+
 ### Scaling & Infrastructure
 
 Produktions-fähige Skalierungsinfrastruktur mit Redis, S3, Zero-Downtime-Deployment.
@@ -408,18 +435,18 @@ php redis-worker.php --once              # Ein Job, dann Exit
 
 **Stack:** React 18.3, TypeScript 5.5, Vite 5.3, PWA (Service Worker, Web Push).
 
-| Bereich    | Inhalt                                                                              |
-| ---------- | ----------------------------------------------------------------------------------- |
-| Pages      | LoginPage, ChatPage                                                                 |
-| Features   | auth, channels, conversations, members, messages, presence                          |
-| Components | ChannelList, MessageList, MessageComposer, MemberList, ChatHeader, Sidebars, Search |
-| API-Client | `src/api/client.ts` – Fetch-Wrapper mit CSRF-Token                                  |
-| PWA        | Service Worker, Push Notifications, Offline-Caching, Background Sync                |
-| Deep Links | Hash-basiertes Routing für Channels, Conversations, Messages                        |
+| Bereich    | Inhalt                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| Pages      | LoginPage, ChatPage                                                                             |
+| Features   | auth, channels, conversations, members, messages, presence, **calls**                           |
+| Components | ChannelList, MessageList, MessageComposer, MemberList, ChatHeader, Sidebars, Search, **CallOverlay** |
+| API-Client | `src/api/client.ts` – Fetch-Wrapper mit CSRF-Token                                              |
+| PWA        | Service Worker, Push Notifications, Offline-Caching, Background Sync                            |
+| Deep Links | Hash-basiertes Routing für Channels, Conversations, Messages                                    |
 
 ## Datenbank
 
-56+ Tabellen: `users`, `spaces`, `space_members`, `channels`, `channel_members`, `conversations`, `conversation_members`, `messages`, `message_edits`, `attachments`, `user_keys`, `conversation_keys`, `read_receipts`, `rate_limits`, `reactions`, `threads`, `mentions`, `notifications`, `domain_events`, `pinned_messages`, `saved_messages`, `moderation_actions`, `jobs`, `push_subscriptions`, `push_delivery_log`, `sync_cursors`, `vapid_keys`, `tasks`, `task_assignees`, `task_comments`, `task_reminders`, `task_activity`, `snippets`, `link_previews`, `drafts`, `draft_collaborators`, `analytics_events`, `analytics_daily`, `analytics_system_events`, `sso_providers`, `sso_user_links`, `user_mfa`, `user_devices`, `user_sessions`, `security_log`, `abuse_scores`, `secrets_vault`, …
+60+ Tabellen: `users`, `spaces`, `space_members`, `channels`, `channel_members`, `conversations`, `conversation_members`, `messages`, `message_edits`, `attachments`, `user_keys`, `conversation_keys`, `read_receipts`, `rate_limits`, `reactions`, `threads`, `mentions`, `notifications`, `domain_events`, `pinned_messages`, `saved_messages`, `moderation_actions`, `jobs`, `push_subscriptions`, `push_delivery_log`, `sync_cursors`, `vapid_keys`, `tasks`, `task_assignees`, `task_comments`, `task_reminders`, `task_activity`, `snippets`, `link_previews`, `drafts`, `draft_collaborators`, `analytics_events`, `analytics_daily`, `analytics_system_events`, `sso_providers`, `sso_user_links`, `user_mfa`, `user_devices`, `user_sessions`, `security_log`, `abuse_scores`, `secrets_vault`, `calls`, `call_history`, `call_presence`, …
 
 E2E-Encryption-Support über `user_keys` + `conversation_keys`.
 
@@ -430,7 +457,7 @@ cd apps/chat-api
 php vendor/bin/phpunit --testdox
 ```
 
-**575 Tests, 1206 Assertions** (PHPUnit 11) – Integration-Tests gegen `cro_chat_test`.
+**637 Tests, 1368 Assertions** (PHPUnit 11) – Integration-Tests gegen `cro_chat_test`.
 
 | Test-Datei             | Fokus                                                         |
 | ---------------------- | ------------------------------------------------------------- |
@@ -457,3 +484,62 @@ php vendor/bin/phpunit --testdox
 | ScalingTest            | Cache, ObjectStorage, RedisQueue, ScalingService, Admin       |
 | SecurityEnterpriseTest | SecretManager, MFA, SSO, DeviceTracker, Sessions, Abuse       |
 | AiFeatureTest          | Summaries, Action Items, Semantic Search, Suggestions, Config |
+| **CallTest**           | **Call-Lifecycle, Signaling, Glare, History, Presence**       |
+| **CallConcurrencyTest**| **Race Conditions, doppelte Initiierung, Lock-Sicherheit**    |
+
+```powershell
+# Nur Call-Tests
+php vendor/bin/phpunit tests/Integration/CallTest.php tests/Integration/CallConcurrencyTest.php --testdox
+```
+
+**Frontend-Tests (Vitest):** 86 Tests — `useCall` Hook, `CallOverlay` Komponente, `CallEngine`
+
+```powershell
+cd apps/chat-web
+npx vitest run
+```
+
+---
+
+## Dependencies
+
+### `apps/chat-api` (PHP)
+
+| Paket | Version | Zweck |
+| ----- | ------- | ----- |
+| `php` | ≥ 8.2 | Laufzeitumgebung |
+| `phpunit/phpunit` | ^11.0 | Test-Framework |
+
+> Kein externes Framework — Router, DI, Middleware, ORM vollständig selbst implementiert.
+
+### `apps/chat-web` (React)
+
+| Paket | Version | Zweck |
+| ----- | ------- | ----- |
+| `react` | ^18.3.1 | UI-Framework |
+| `react-dom` | ^18.3.1 | DOM-Rendering |
+| `typescript` | ^5.5.4 | Typsicherheit |
+| `vite` | ^5.3.4 | Build-Tool + Dev-Server (HMR) |
+| `vitest` | ^4.1.4 | Unit-Test-Framework |
+| `@testing-library/react` | ^16.3.2 | Komponenten-Tests |
+| `@testing-library/jest-dom` | ^6.9.1 | DOM-Matcher |
+| `@vitejs/plugin-react` | ^4.3.1 | React-Plugin für Vite |
+| `jsdom` | ^28.1.0 | Browser-Simulation für Tests |
+
+> WebRTC (`RTCPeerConnection`, `getUserMedia`) — native Browser-API, keine externe Bibliothek.
+
+### `apps/realtime` (Node.js WebSocket-Gateway)
+
+| Paket | Version | Zweck |
+| ----- | ------- | ----- |
+| `ws` | ^8.18.0 | WebSocket-Server |
+| `redis` | ^5.11.0 | Pub/Sub für horizontale Skalierung |
+| `mysql2` | ^3.11.0 | DB-Verbindung für Auth-Validierung |
+| `dotenv` | ^16.4.5 | Umgebungsvariablen |
+| `tsx` | ^4.19.0 | TypeScript-Ausführung (Dev) |
+
+### `apps/desktop` (Tauri)
+
+| Paket | Version | Zweck |
+| ----- | ------- | ----- |
+| Tauri 2 | ^2.x | Desktop-Wrapper (Rust + WebView) |
