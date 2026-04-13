@@ -31,7 +31,9 @@ final class ChannelService
 
     public static function create(int $spaceId, string $name, string $description, string $color, bool $isPrivate, int $userId): array
     {
-        self::requireSpaceMember($spaceId, $userId);
+        if (!SpaceRepository::isAdminOrOwner($spaceId, $userId)) {
+            throw ApiException::forbidden('Nur Admins und Owner können Channels erstellen', 'CHANNEL_CREATE_DENIED');
+        }
         return ChannelRepository::create($spaceId, $name, $description, $color, $isPrivate, $userId);
     }
 

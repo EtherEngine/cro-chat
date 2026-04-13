@@ -1,4 +1,4 @@
-import type { User, Channel, Message, Conversation, CursorPage, PresenceMap, UnreadCounts, KeyBundle, ConversationKey, Attachment, SearchResults, SearchFilters, PinnedMessage, SavedMessage, Call, CallSession, IceServerConfig, AppNotification } from '../types';
+import type { User, Channel, Message, Reaction, Thread, Conversation, CursorPage, PresenceMap, UnreadCounts, KeyBundle, ConversationKey, Attachment, SearchResults, SearchFilters, PinnedMessage, SavedMessage, Call, CallSession, IceServerConfig, AppNotification } from '../types';
 
 const API_BASE = 'http://localhost/chat-api/public';
 
@@ -343,10 +343,10 @@ export const api = {
       const q = qs.toString();
       return request<CursorPage<Message>>(`/api/channels/${channelId}/messages${q ? '?' + q : ''}`);
     },
-    sendChannel: (channelId: number, body: string, idempotencyKey?: string) =>
+    sendChannel: (channelId: number, body: string, idempotencyKey?: string, replyToId?: number) =>
       request<{ message: Message }>(`/api/channels/${channelId}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ body, idempotency_key: idempotencyKey }),
+        body: JSON.stringify({ body, idempotency_key: idempotencyKey, ...(replyToId ? { reply_to_id: replyToId } : {}) }),
       }),
     forConversation: (convId: number, params?: { before?: number; after?: number; limit?: number }) => {
       const qs = new URLSearchParams();
@@ -356,10 +356,58 @@ export const api = {
       const q = qs.toString();
       return request<CursorPage<Message>>(`/api/conversations/${convId}/messages${q ? '?' + q : ''}`);
     },
-    sendConversation: (convId: number, body: string, idempotencyKey?: string) =>
+    sendConversation: (convId: number, body: string, idempotencyKey?: string, replyToId?: number) =>
       request<{ message: Message }>(`/api/conversations/${convId}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ body, idempotency_key: idempotencyKey }),
+        body: JSON.stringify({ body, idempotency_key: idempotencyKey, ...(replyToId ? { reply_to_id: replyToId } : {}) }),
+      }),
+    edit: (messageId: number, body: string) =>
+      request<{ message: Message }>(`/api/messages/${messageId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ body }),
+      }),
+    delete: (messageId: number) =>
+      request<{ ok: boolean }>(`/api/messages/${messageId}`, { method: 'DELETE' }),
+  },
+
+  threads: {
+    get: (threadId: number, params?: { before?: number; after?: number; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.before) qs.set('before', String(params.before));
+      if (params?.after) qs.set('after', String(params.after));
+      if (params?.limit) qs.set('limit', String(params.limit));
+      const q = qs.toString();
+      return request<{ thread: Thread; root_message: Message; messages: Message[]; has_more: boolean; next_cursor: number | null }>(
+        `/api/threads/${threadId}${q ? '?' + q : ''}`,
+      );
+    },
+    startThread: (messageId: number, body: string) =>
+      request<{ thread: Thread; message: Message }>(`/api/messages/${messageId}/thread`, {
+        method: 'POST',
+        body: JSON.stringify({ body }),
+      }),
+    reply: (threadId: number, body: string) =>
+      request<{ message: Message }>(`/api/threads/${threadId}/replies`, {
+        method: 'POST',
+        body: JSON.stringify({ body }),
+      }),
+    markRead: (threadId: number, messageId: number) =>
+      request<{ ok: boolean }>(`/api/threads/${threadId}/read`, {
+        method: 'POST',
+        body: JSON.stringify({ message_id: messageId }),
+      }),
+  },
+
+  reactions: {
+    add: (messageId: number, emoji: string) =>
+      request<{ reactions: Reaction[] }>(`/api/messages/${messageId}/reactions`, {
+        method: 'POST',
+        body: JSON.stringify({ emoji }),
+      }),
+    remove: (messageId: number, emoji: string) =>
+      request<{ reactions: Reaction[] }>(`/api/messages/${messageId}/reactions`, {
+        method: 'DELETE',
+        body: JSON.stringify({ emoji }),
       }),
   },
 
@@ -589,5 +637,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ action }),
       }),
+    resetPresence: () =>
+      request<{ reset: boolean }>('/api/dev/calls/reset-presence', { method: 'POST' }),
   },
 };

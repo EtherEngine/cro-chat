@@ -31,7 +31,7 @@ export function CallSimulatorPanel() {
 }
 
 function CallSimulatorPanelInner() {
-  const { state, simulateIncoming, botAction, clearActiveCall } = useCallSimulator();
+  const { state, simulateIncoming, botAction, clearActiveCall, forceResetPresence } = useCallSimulator();
   const [selectedScenario, setSelectedScenario] = useState('ring_only');
   const [collapsed, setCollapsed] = useState(false);
 
@@ -174,11 +174,11 @@ function CallSimulatorPanelInner() {
               </div>
 
               <button
-                onClick={clearActiveCall}
+                onClick={() => void clearActiveCall()}
                 disabled={state.loading}
                 style={btnStyle('#3f3f46', state.loading)}
               >
-                Panel zurücksetzen
+                {state.loading ? 'Wird beendet…' : 'Panel zurücksetzen'}
               </button>
             </>
           )}
@@ -203,6 +203,16 @@ function CallSimulatorPanelInner() {
           <div style={{ color: '#52525b', fontSize: 10, borderTop: '1px solid #27272a', paddingTop: 6 }}>
             Backend: APP_ENV=local · Route: POST /api/dev/calls/simulate
           </div>
+
+          {/* Force-reset stuck presence */}
+          <button
+            onClick={() => void forceResetPresence()}
+            disabled={state.loading}
+            style={{ ...btnStyle('#374151', state.loading), marginTop: 2 }}
+            title='Löscht alle hängengebliebenen "Wird angerufen"-Statuseinträge'
+          >
+            🔄 Presence zurücksetzen
+          </button>
         </div>
       )}
     </div>

@@ -1,10 +1,13 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useApp } from '../../store';
 import { CallMessage } from './CallMessage';
 import { MessageItem } from './MessageItem';
 
 export function MessageList() {
   const { state, dispatch } = useApp();
+  const [pinnedCollapsed, setPinnedCollapsed] = useState(false);
+
+  const pinnedMessages = state.messages.filter((m) => m.is_pinned && !m.deleted_at);
   const endRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -44,6 +47,38 @@ export function MessageList() {
 
   return (
     <div className="message-list">
+      {pinnedMessages.length > 0 && (
+        <div className="pinned-bar">
+          <div className="pinned-bar-header" onClick={() => setPinnedCollapsed((v) => !v)}>
+            <span className="pinned-bar-icon">📌</span>
+            <span className="pinned-bar-title">
+              {pinnedMessages.length === 1
+                ? 'Angepinnte Nachricht'
+                : `${pinnedMessages.length} angepinnte Nachrichten`}
+            </span>
+            <span className="pinned-bar-toggle">{pinnedCollapsed ? '▾' : '▴'}</span>
+          </div>
+          {!pinnedCollapsed && (
+            <ul className="pinned-bar-list">
+              {pinnedMessages.map((msg) => (
+                <li key={msg.id}>
+                  <button
+                    type="button"
+                    className="pinned-bar-item"
+                    onClick={() => dispatch({ type: 'JUMP_TO_MESSAGE', messageId: msg.id })}
+                    title="Zur Nachricht springen"
+                  >
+                    <span className="pinned-bar-author">{msg.user?.display_name ?? 'Unbekannt'}</span>
+                    <span className="pinned-bar-body">
+                      {(msg.body ?? '').slice(0, 120) || '(Anhang)'}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {state.messages.map((msg) => (
         <div key={msg.id} ref={(el) => setRef(msg.id, el)}>
           {msg.type === 'call' ? (

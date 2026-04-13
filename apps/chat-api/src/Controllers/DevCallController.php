@@ -22,6 +22,7 @@ use App\Support\Validator;
  *   GET  /api/dev/calls/scenarios              — list available scenarios
  *   POST /api/dev/calls/simulate               — bot initiates incoming call
  *   POST /api/dev/calls/{callId}/bot-action    — bot performs cancel/hangup
+ *   POST /api/dev/calls/reset-presence         — force-clear stuck ringing presence
  *
  * ⚠️  These routes MUST NOT be deployed to production.
  *     They are blocked by the APP_ENV guard, but the defence-in-depth policy
@@ -97,6 +98,21 @@ final class DevCallController
 
         $call = DevCallService::botAction($callId, (string) $input['action']);
         Response::json(['call' => $call]);
+    }
+
+    /**
+     * POST /api/dev/calls/reset-presence
+     *
+     * Force-clears any stuck call_presence rows for the current user and
+     * the dev bot.  Cancels any still-ringing call between them.
+     * Use this when "Wird angerufen" is stuck after an abandoned simulation.
+     */
+    public function resetPresence(): void
+    {
+        self::requireDevEnv();
+        $userId = Request::requireUserId();
+        DevCallService::forceResetPresence($userId);
+        Response::json(['reset' => true]);
     }
 
     // ── Guard ─────────────────────────────────────────────────

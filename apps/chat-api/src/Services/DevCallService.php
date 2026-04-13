@@ -163,9 +163,58 @@ final class DevCallService
         return $result;
     }
 
-    // ── Internal helpers ──────────────────────────────────────
+    // ── Force-reset stuck presence ────────────────────────────
 
-    private static function requireBotUser(): array
+    /**
+     * Forcibly clear any stuck call_presence for the target user and the dev bot.
+     * Also cancels any still-active (non-terminal) calls between them.
+     *
+     * Safe to call multiple times — idempotent.
+     */
+    public static function forceResetPresence(int $targetUserId): void
+    {
+        $bot = self::requireBotUser();
+        $botUserId = (int) $bot['id'];
+
+        // Cancel any still-ringing or active calls between bot and target
+        $stmt = Database::connection()->prepare(
+            "SELECT id FROM calls
+              WHERE status NOT IN ('ended','missed','rejected','failed')
+                AND (
+                  (caller_user_id = ? AND callee_user_id = ?)
+                  OR
+                  (caller_user_id = ? AND callee_user_id = ?)
+                )
+              ORDER BY id DESC
+              LIMIT 5"
+        );
+        $stmt->execute([$botUserId, $targetUserId, $targetUserId, $botUserId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $prevSession = $_SESSION['user_id'] ?? null;
+        $_SESSION['user_id'] = $botUserId;
+
+        try {
+            foreach ($rows as $row) {
+                try {
+                    CallService::cancel((int) $row['id'], $botUserId);
+                } catch (\Throwable) {
+                    // best-effort — may already be transitioning
+                }
+            }
+        } finally {
+            $_SESSION['user_id'] = $prevSession;
+        }
+
+        // Direct DB clear as fallback — handles edge cases where cancel
+        // didn't publish the presence event (e.g. already terminal state).
+        UserRepository::clearCallPresence($targetUserId);
+        UserRepository::clearCallPresence($botUserId);
+        CallService::publishPresenceChangePublic($targetUserId, 'online');
+        CallService::publishPresenceChangePublic($botUserId, 'online');
+    }
+
+    // ── Internal helpers ──────────────────────────────────────
     {
         $bot = UserRepository::findByEmail(self::BOT_EMAIL);
         if (!$bot) {

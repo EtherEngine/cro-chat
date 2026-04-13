@@ -34,7 +34,7 @@ export function setSharedRealtimeClient(client: RealtimeClient): void {
  */
 export function useRealtime() {
   const { state, dispatch } = useApp();
-  const { activeChannelId, activeConversationId, messages } = state;
+  const { activeChannelId, activeConversationId, messages, threadPanel } = state;
   const [wsConnected, setWsConnected] = useState(false);
 
   // Track last known message ID for delta resync
@@ -104,6 +104,67 @@ export function useRealtime() {
         });
       }
 
+      // ── Pin events ──
+      if (type === 'message.pinned' && room === activeRoom) {
+        const p = payload as { message_id: number };
+        const msg = messages.find((m) => m.id === p.message_id);
+        if (msg) {
+          dispatch({ type: 'APPEND_MESSAGES', messages: [{ ...msg, is_pinned: true }] });
+        }
+      }
+      if (type === 'message.unpinned' && room === activeRoom) {
+        const p = payload as { message_id: number };
+        const msg = messages.find((m) => m.id === p.message_id);
+        if (msg) {
+          dispatch({ type: 'APPEND_MESSAGES', messages: [{ ...msg, is_pinned: false }] });
+        }
+      }
+
+      // ── Thread events (thread.reply.created, thread.created) ──
+      // These are published to the same channel/conversation room.
+      if (type === 'thread.reply.created' && room === activeRoom) {
+        const p = payload as { thread_id: number; message: Message };
+        // If this thread panel is open for this thread, append the reply
+        if (threadPanel?.thread?.id === p.thread_id) {
+          const updatedThread = {
+            ...threadPanel.thread,
+            reply_count: threadPanel.thread.reply_count + 1,
+            last_reply_at: new Date().toISOString(),
+          };
+          dispatch({ type: 'APPEND_THREAD_REPLY', message: p.message, thread: updatedThread });
+        }
+        // Update reply count badge on the root message in the main feed
+        // We need to find the root message; the thread's root_message_id is available on threadPanel,
+        // or we can update via the message.root_message lookup via threadPanel.
+        // Fallback: update if the thread panel shows this thread.
+        if (threadPanel?.thread?.id === p.thread_id && threadPanel.rootMessage) {
+          dispatch({
+            type: 'APPEND_MESSAGES',
+            messages: [{
+              ...threadPanel.rootMessage,
+              thread: {
+                id: p.thread_id,
+                reply_count: (threadPanel.rootMessage.thread?.reply_count ?? 0) + 1,
+                last_reply_at: new Date().toISOString(),
+              },
+            }],
+          });
+        }
+      }
+
+      if (type === 'thread.created' && room === activeRoom) {
+        // payload = { thread, root_message_id }
+        const p = payload as { thread: { id: number; root_message_id: number; reply_count: number; last_reply_at: string | null }; root_message_id: number };
+        // Update the root message in the feed with its new thread summary
+        const rootMsg = messages.find((m) => m.id === p.root_message_id);
+        if (rootMsg) {
+          dispatch({
+            type: 'APPEND_MESSAGES',
+            messages: [{ ...rootMsg, thread: { id: p.thread.id, reply_count: p.thread.reply_count, last_reply_at: p.thread.last_reply_at } }],
+          });
+        }
+      }
+
       // If it's a message event for a non-active room, it means an unread
       if (type === 'message.created' && room !== activeRoom) {
         // Refresh unread counts
@@ -143,7 +204,7 @@ export function useRealtime() {
         }
       }
     },
-    [activeChannelId, activeConversationId, dispatch],
+    [activeChannelId, activeConversationId, messages, threadPanel, dispatch],
   );
 
   useEffect(() => {

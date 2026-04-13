@@ -27,10 +27,16 @@ export function ChatHeader() {
     title = channel.name;
     meta = `${channel.member_count} members`;
   } else if (conversation) {
-    title = conversation.users.map((u) => u.display_name).join(', ');
-    const other = conversation.users.find((u) => u.id !== state.user?.id);
-    if (other) {
-      presenceStatus = state.presence[other.id] ?? other.status ?? 'offline';
+    const me = state.user?.id;
+    const isSelf = conversation.users.length === 1 && conversation.users[0].id === me;
+    if (isSelf) {
+      title = 'Saved Messages';
+    } else {
+      const other = conversation.users.find((u) => u.id !== me);
+      title = other?.display_name ?? conversation.users.map((u) => u.display_name).join(', ');
+      if (other) {
+        presenceStatus = state.presence[other.id] ?? other.status ?? 'offline';
+      }
     }
   }
 
@@ -51,7 +57,9 @@ export function ChatHeader() {
           </div>
         )}
       </div>
-      {conversation && <CallButton conversationId={conversation.id} />}
+      {conversation && !(conversation.users.length === 1 && conversation.users[0].id === state.user?.id) && (
+        <CallButton conversationId={conversation.id} />
+      )}
     </div>
   );
 }

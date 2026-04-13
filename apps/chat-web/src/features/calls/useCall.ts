@@ -293,6 +293,13 @@ export function useCall(userId: number) {
               guardedPatch({ phase: 'ringing-incoming', call: incomingCall, error: null });
               return;
             }
+            // We are the caller of a stale call — cancel it so the user can retry
+            if (activeCall && activeCall.caller_user_id === userId) {
+              api.calls.cancel(activeCall.id).catch(() => {});
+              guardedPatch({ phase: 'idle', call: null, error: null, mediaError: null });
+              destroyEngine();
+              return;
+            }
           }
         }
 
@@ -377,7 +384,16 @@ export function useCall(userId: number) {
    * Hang up an active (accepted) call — either party.
    */
   const hangup = useCallback(async () => {
-    const { call, phase } = stateRef.current;
+    const { call, phase, mediaError } = stateRef.current;
+    // If the overlay is showing a media error (e.g. microphone denied), dismiss
+    // and cancel any server-side call that was already initiated before the error.
+    if (mediaError) {
+      if (call) {
+        api.calls.cancel(call.id).catch(() => {}); // best-effort
+      }
+      resetToIdle();
+      return;
+    }
     if (!call) return;
     if (phase !== 'connecting' && phase !== 'active') return;
 

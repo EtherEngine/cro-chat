@@ -21,9 +21,11 @@ export function ChatPage() {
           dispatch({ type: 'SET_ACTIVE_CHANNEL', channelId: channels[0].id });
         }
       });
-    });
-    api.conversations.list().then(({ conversations }) => {
-      dispatch({ type: 'SET_CONVERSATIONS', conversations });
+
+      // Load conversations (backend auto-creates "Saved Messages" self-conversation)
+      api.conversations.list().then(({ conversations }) => {
+        dispatch({ type: 'SET_CONVERSATIONS', conversations });
+      });
     });
     // Initial unread fetch
     api.unread.counts().then((unread) => {

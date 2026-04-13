@@ -3,7 +3,7 @@ import { useApp } from '../../store';
 import type { PresenceStatus } from '../../types';
 
 /** Presence states that indicate the remote user cannot take a call. */
-const BUSY_STATUSES: PresenceStatus[] = ['in_call', 'ringing', 'dnd'];
+const BUSY_STATUSES: PresenceStatus[] = ['in_call', 'dnd'];
 
 /**
  * Phone icon button for the ChatHeader. Shown only in DM conversations.
@@ -27,7 +27,8 @@ export function CallButton({ conversationId }: { conversationId: number }) {
   let title = 'Anrufen';
   if (localBusy) title = 'Anruf läuft bereits';
   else if (remoteStatus === 'dnd') title = 'Nicht stören aktiv';
-  else if (remoteStatus === 'in_call' || remoteStatus === 'ringing') title = 'Nutzer ist im Gespräch';
+  else if (remoteStatus === 'in_call') title = 'Nutzer ist im Gespräch';
+  else if (remoteStatus === 'ringing') title = 'Anrufen';
   else if (remoteStatus === 'offline') title = 'Nutzer ist offline';
 
   return (

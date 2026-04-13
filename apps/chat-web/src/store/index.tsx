@@ -1,5 +1,13 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
-import type { User, Channel, Message, Conversation, PresenceMap, UnreadCounts, AppNotification } from '../types';
+import type { User, Channel, Message, Thread, Conversation, PresenceMap, UnreadCounts, AppNotification, Reaction } from '../types';
+
+type ThreadPanelState = {
+  rootMessage: Message;
+  thread: Thread | null;
+  messages: Message[];
+  loading: boolean;
+  error: string;
+};
 
 type State = {
   user: User | null;
@@ -15,8 +23,10 @@ type State = {
   unread: UnreadCounts;
   showMembers: boolean;
   jumpToMessageId: number | null;
+  replyToMessage: Message | null;
   notifications: AppNotification[];
   notificationUnread: number;
+  threadPanel: ThreadPanelState | null;
 };
 
 type Action =
@@ -43,7 +53,17 @@ type Action =
   | { type: 'SET_NOTIFICATIONS'; notifications: AppNotification[] }
   | { type: 'ADD_NOTIFICATION'; notification: AppNotification }
   | { type: 'SET_NOTIFICATION_UNREAD'; count: number }
-  | { type: 'MARK_NOTIFICATION_READ'; notificationId: number };
+  | { type: 'MARK_NOTIFICATION_READ'; notificationId: number }
+  | { type: 'SET_REPLY_TO'; message: Message | null }
+  | { type: 'REMOVE_MESSAGE'; messageId: number }
+  | { type: 'UPDATE_MESSAGE_REACTIONS'; messageId: number; reactions: Reaction[] }
+  | { type: 'UPDATE_MESSAGE'; messageId: number; patch: Partial<Message> }
+  | { type: 'OPEN_THREAD'; rootMessage: Message }
+  | { type: 'CLOSE_THREAD' }
+  | { type: 'SET_THREAD_LOADING'; loading: boolean }
+  | { type: 'SET_THREAD_DATA'; thread: Thread; rootMessage: Message; messages: Message[] }
+  | { type: 'APPEND_THREAD_REPLY'; message: Message; thread: Thread }
+  | { type: 'SET_THREAD_ERROR'; error: string };
 
 const initialState: State = {
   user: null,
@@ -59,8 +79,10 @@ const initialState: State = {
   unread: { channels: {}, conversations: {} },
   showMembers: true,
   jumpToMessageId: null,
+  replyToMessage: null,
   notifications: [],
   notificationUnread: 0,
+  threadPanel: null,
 };
 
 function mergeMessages(existing: Message[], incoming: Message[]): Message[] {
@@ -89,8 +111,21 @@ function reducer(state: State, action: Action): State {
       return { ...state, messages: action.messages };
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.message] };
-    case 'APPEND_MESSAGES':
-      return { ...state, messages: mergeMessages(state.messages, action.messages) };
+    case 'APPEND_MESSAGES': {
+      const merged = mergeMessages(state.messages, action.messages);
+      if (!state.threadPanel) return { ...state, messages: merged };
+      const incoming = new Map(action.messages.map((m) => [m.id, m]));
+      const newRoot = incoming.get(state.threadPanel.rootMessage.id);
+      return {
+        ...state,
+        messages: merged,
+        threadPanel: {
+          ...state.threadPanel,
+          rootMessage: newRoot ?? state.threadPanel.rootMessage,
+          messages: state.threadPanel.messages.map((m) => incoming.get(m.id) ?? m),
+        },
+      };
+    }
     case 'SET_MEMBERS':
       return { ...state, members: action.members };
     case 'SET_CONVERSATIONS':
@@ -142,6 +177,86 @@ function reducer(state: State, action: Action): State {
         ),
         notificationUnread: Math.max(0, state.notificationUnread - 1),
       };
+    case 'SET_REPLY_TO':
+      return { ...state, replyToMessage: action.message };
+    case 'REMOVE_MESSAGE':
+      return { ...state, messages: state.messages.filter((m) => m.id !== action.messageId) };
+    case 'UPDATE_MESSAGE_REACTIONS': {
+      const applyReactions = (m: Message) =>
+        m.id === action.messageId ? { ...m, reactions: action.reactions } : m;
+      return {
+        ...state,
+        messages: state.messages.map(applyReactions),
+        threadPanel: state.threadPanel
+          ? {
+              ...state.threadPanel,
+              rootMessage: applyReactions(state.threadPanel.rootMessage),
+              messages: state.threadPanel.messages.map(applyReactions),
+            }
+          : state.threadPanel,
+      };
+    }
+    case 'UPDATE_MESSAGE': {
+      const applyPatch = (m: Message) =>
+        m.id === action.messageId ? { ...m, ...action.patch } : m;
+      return {
+        ...state,
+        messages: state.messages.map(applyPatch),
+        threadPanel: state.threadPanel
+          ? {
+              ...state.threadPanel,
+              rootMessage: applyPatch(state.threadPanel.rootMessage),
+              messages: state.threadPanel.messages.map(applyPatch),
+            }
+          : state.threadPanel,
+      };
+    }
+    case 'OPEN_THREAD':
+      return {
+        ...state,
+        threadPanel: {
+          rootMessage: action.rootMessage,
+          thread: null,
+          messages: [],
+          loading: !!action.rootMessage.thread?.id,
+          error: '',
+        },
+      };
+    case 'CLOSE_THREAD':
+      return { ...state, threadPanel: null };
+    case 'SET_THREAD_LOADING':
+      return state.threadPanel
+        ? { ...state, threadPanel: { ...state.threadPanel, loading: action.loading } }
+        : state;
+    case 'SET_THREAD_DATA':
+      return {
+        ...state,
+        threadPanel: {
+          rootMessage: action.rootMessage,
+          thread: action.thread,
+          messages: action.messages,
+          loading: false,
+          error: '',
+        },
+      };
+    case 'APPEND_THREAD_REPLY': {
+      if (!state.threadPanel) return state;
+      const already = state.threadPanel.messages.some((m) => m.id === action.message.id);
+      return {
+        ...state,
+        threadPanel: {
+          ...state.threadPanel,
+          thread: action.thread,
+          messages: already
+            ? state.threadPanel.messages.map((m) => (m.id === action.message.id ? action.message : m))
+            : [...state.threadPanel.messages, action.message],
+        },
+      };
+    }
+    case 'SET_THREAD_ERROR':
+      return state.threadPanel
+        ? { ...state, threadPanel: { ...state.threadPanel, loading: false, error: action.error } }
+        : state;
     default:
       return state;
   }

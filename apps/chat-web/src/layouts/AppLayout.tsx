@@ -4,6 +4,7 @@ import { SidebarRight } from '../components/layout/SidebarRight';
 import { ChatHeader } from '../components/layout/ChatHeader';
 import { MessageList } from '../components/messages/MessageList';
 import { MessageComposer } from '../components/messages/MessageComposer';
+import { ThreadPanel } from '../components/messages/ThreadPanel';
 import { EmptyState } from '../components/chat/EmptyState';
 
 export function AppLayout() {
@@ -24,7 +25,11 @@ export function AppLayout() {
           <EmptyState />
         )}
       </main>
-      {state.showMembers && state.activeChannelId && <SidebarRight />}
+      {state.threadPanel ? (
+        <ThreadPanel />
+      ) : (
+        state.showMembers && state.activeChannelId && <SidebarRight />
+      )}
     </div>
   );
 }

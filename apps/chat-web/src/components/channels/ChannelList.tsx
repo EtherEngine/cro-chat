@@ -21,9 +21,11 @@ export function ChannelList() {
     <>
       <div className="section-header">
         <span>Channels</span>
-        <button className="add-btn" title="Add channel" onClick={() => setShowNewChannel(true)}>
-          +
-        </button>
+        {(state.spaceRole === 'admin' || state.spaceRole === 'owner') && (
+          <button className="add-btn" title="Add channel" onClick={() => setShowNewChannel(true)}>
+            +
+          </button>
+        )}
       </div>
       {showNewChannel && <NewChannelModal onClose={() => setShowNewChannel(false)} />}
       <ul className="channel-list">
@@ -48,10 +50,53 @@ export function ChannelList() {
       </div>
       {showNewDm && <NewDmModal onClose={() => setShowNewDm(false)} />}
       <ul className="channel-list">
-        {state.conversations.map((conv) => {
+        {state.conversations
+          .slice()
+          .sort((a, b) => {
+            const me = state.user!.id;
+            const aIsSelf = a.users.length === 1 && a.users[0].id === me;
+            const bIsSelf = b.users.length === 1 && b.users[0].id === me;
+            if (aIsSelf && !bIsSelf) return -1;
+            if (!aIsSelf && bIsSelf) return 1;
+            return 0;
+          })
+          .map((conv) => {
           const me = state.user!.id;
-          const other = conv.users.find((u) => u.id !== me) ?? conv.users[0];
+          const isSelf = conv.users.length === 1 && conv.users[0].id === me;
+          const other = isSelf ? conv.users[0] : (conv.users.find((u) => u.id !== me) ?? conv.users[0]);
           if (!other) return null;
+
+          if (isSelf) {
+            return (
+              <li
+                key={conv.id}
+                className={`dm-item${
+                  conv.id === state.activeConversationId ? ' active' : ''
+                }${(state.unread.conversations[conv.id] ?? 0) > 0 ? ' unread' : ''}`}
+                onClick={() =>
+                  dispatch({
+                    type: 'SET_ACTIVE_CONVERSATION',
+                    conversationId: conv.id,
+                  })
+                }
+              >
+                <div className="dm-avatar dm-avatar--saved">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M5 2h14a1 1 0 0 1 1 1v19.143a.5.5 0 0 1-.766.424L12 18.03l-7.234 4.536A.5.5 0 0 1 4 22.143V3a1 1 0 0 1 1-1z" />
+                  </svg>
+                </div>
+                <div className="dm-label">
+                  <span className="dm-name">Saved Messages</span>
+                </div>
+                {(state.unread.conversations[conv.id] ?? 0) > 0 && (
+                  <span className="unread-badge">
+                    {state.unread.conversations[conv.id] > 99 ? '99+' : state.unread.conversations[conv.id]}
+                  </span>
+                )}
+              </li>
+            );
+          }
+
           const initials = other.display_name
             .split(' ')
             .map((n) => n[0])

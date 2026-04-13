@@ -27,6 +27,23 @@ export type Attachment = {
   created_at: string;
 };
 
+export type Reaction = {
+  emoji: string;
+  count: number;
+  user_ids: number[];
+};
+
+export type Thread = {
+  id: number;
+  root_message_id: number;
+  channel_id: number | null;
+  conversation_id: number | null;
+  reply_count: number;
+  last_reply_at: string | null;
+  created_by: number;
+  created_at: string;
+};
+
 export type CallMeta = {
   call_id: number;
   status: CallStatus;
@@ -49,10 +66,21 @@ export type Message = {
   channel_id: number | null;
   conversation_id: number | null;
   reply_to_id: number | null;
+  /** Embedded excerpt of the referenced message, returned by the API. */
+  reply_to?: {
+    id: number;
+    body: string | null;
+    user?: { id: number; display_name: string } | null;
+  } | null;
   edited_at: string | null;
   deleted_at: string | null;
   created_at: string;
   attachments: Attachment[];
+  thread_id?: number | null;
+  thread?: { id: number; reply_count: number; last_reply_at: string | null } | null;
+  reactions?: Reaction[];
+  is_pinned?: boolean;
+  is_saved?: boolean;
   user?: {
     id: number;
     display_name: string;

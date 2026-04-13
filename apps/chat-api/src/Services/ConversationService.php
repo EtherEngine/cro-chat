@@ -12,7 +12,35 @@ final class ConversationService
 {
     public static function listForUser(int $userId, ?int $spaceId = null): array
     {
+        // Auto-ensure "Saved Messages" self-conversation exists
+        $ensureSpaceId = $spaceId;
+        if ($ensureSpaceId === null) {
+            $spaces = SpaceRepository::forUser($userId);
+            if (!empty($spaces)) {
+                $ensureSpaceId = (int) $spaces[0]['id'];
+            }
+        }
+        if ($ensureSpaceId !== null) {
+            self::ensureSelfConversation($ensureSpaceId, $userId);
+        }
+
         return ConversationRepository::forUser($userId, $spaceId);
+    }
+
+    /**
+     * Ensure the "Saved Messages" self-conversation exists for this user.
+     */
+    private static function ensureSelfConversation(int $spaceId, int $userId): void
+    {
+        $hash = ConversationRepository::participantHash([$userId]);
+        $existing = ConversationRepository::findByHash($spaceId, $hash);
+        if (!$existing) {
+            try {
+                ConversationRepository::getOrCreate($spaceId, [$userId], false, 'Saved Messages', $userId);
+            } catch (\Throwable $e) {
+                // Silently ignore — race condition or other transient issue
+            }
+        }
     }
 
     /**
@@ -24,8 +52,9 @@ final class ConversationService
      */
     public static function getOrCreateDirect(int $spaceId, int $callerId, int $targetUserId): array
     {
+        // Self-conversation ("Saved Messages")
         if ($callerId === $targetUserId) {
-            throw ApiException::validation('Kann keine Konversation mit sich selbst erstellen', 'SELF_CONVERSATION');
+            return self::getOrCreateSelf($spaceId, $callerId);
         }
 
         foreach ([$callerId, $targetUserId] as $uid) {
@@ -58,6 +87,19 @@ final class ConversationService
         }
 
         return ConversationRepository::getOrCreate($spaceId, $allIds, true, $title, $callerId);
+    }
+
+    /**
+     * Get-or-create a "Saved Messages" self-conversation.
+     * Uses participant_hash with single user for dedup.
+     */
+    public static function getOrCreateSelf(int $spaceId, int $userId): array
+    {
+        if (!SpaceRepository::isMember($spaceId, $userId)) {
+            throw ApiException::forbidden("Benutzer $userId ist kein Mitglied dieses Space", 'SPACE_MEMBER_REQUIRED');
+        }
+
+        return ConversationRepository::getOrCreate($spaceId, [$userId], false, 'Saved Messages', $userId);
     }
 
     public static function show(int $conversationId, int $userId): array

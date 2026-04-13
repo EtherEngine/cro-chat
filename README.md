@@ -5,7 +5,6 @@ Chat-Anwendung – PHP-Backend, React-Frontend, MariaDB.
 <img width="1612" height="989" alt="cro_chat2" src="https://github.com/user-attachments/assets/92e9c2a0-d847-4474-a81a-daa6c12fd935" />
 <img width="1612" height="989" alt="cro_chat1" src="https://github.com/user-attachments/assets/51fbd305-3e88-499d-9608-807419dfa583" />
 
-
 ## Quick Start
 
 ### Voraussetzungen
@@ -80,12 +79,12 @@ scripts/
 
 **Stack:** PHP 8.2, Custom-Framework (Router, Request/Response, Middleware-Pipeline), PSR-4 Autoloading, kein externes Framework.
 
-| Schicht    | Anzahl | Beispiele                                                                                                                                                                                                                                                                  |
-| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Controller | 27     | Auth, Channel, Message, Conversation, Presence, Search, Attachment, Key, ReadReceipt, Space, User, Reaction, Pin, SavedMessage, Thread, Mention, Notification, Moderation, Job, Compliance, Device, RichContent, Analytics, Scaling, Security, Ai, **Call**                |
+| Schicht    | Anzahl | Beispiele                                                                                                                                                                                                                                                                                  |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Controller | 27     | Auth, Channel, Message, Conversation, Presence, Search, Attachment, Key, ReadReceipt, Space, User, Reaction, Pin, SavedMessage, Thread, Mention, Notification, Moderation, Job, Compliance, Device, RichContent, Analytics, Scaling, Security, Ai, **Call**                                |
 | Service    | 28     | Auth, Channel, Message, Notification, Mention, Reaction, Thread, Attachment, Presence, Role, Moderation, Job, Compliance, Push, RichContent, Search, Analytics, Scaling, MFA, SSO, DeviceTracker, AbuseDetection, SessionManager, SecretManager, SecurityLogger, Ai, **Call**, **DevCall** |
-| Repository | 19     | Message, Search, Key, Channel, Conversation, User, Space, Event, Notification, Thread, Moderation, Job, Compliance, Device, RichContent, Analytics, Ai, **Call**, …                                                                                                        |
-| Middleware | 4      | Auth, CSRF, CORS, RateLimit                                                                                                                                                                                                                                                |
+| Repository | 19     | Message, Search, Key, Channel, Conversation, User, Space, Event, Notification, Thread, Moderation, Job, Compliance, Device, RichContent, Analytics, Ai, **Call**, …                                                                                                                        |
+| Middleware | 4      | Auth, CSRF, CORS, RateLimit                                                                                                                                                                                                                                                                |
 
 ### Sicherheit
 
@@ -348,11 +347,11 @@ Echtzeit-Sprachanrufe zwischen zwei Nutzern, vollständig integriert in das best
 - **Call Overlay** – Globale UI-Schicht über der gesamten App (klingeln, verbinden, aktiver Anruf, Fehler)
 - **Dev-Simulator** – Floating Panel (`VITE_CALL_SIMULATION=true`) simuliert eingehende Anrufe ohne echtes Mikrofon
 
-| Datenmodell      | Felder                                                                           |
-| ---------------- | -------------------------------------------------------------------------------- |
-| `calls`          | status, caller/callee user_id, conversation_id, started_at, duration_seconds, end_reason |
-| `call_history`   | View/Tabelle mit formatierten Anruf-Einträgen pro Conversation                   |
-| `call_presence`  | Echtzeit-Verfügbarkeit (available/in_call/unavailable) pro User                  |
+| Datenmodell     | Felder                                                                                   |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| `calls`         | status, caller/callee user_id, conversation_id, started_at, duration_seconds, end_reason |
+| `call_history`  | View/Tabelle mit formatierten Anruf-Einträgen pro Conversation                           |
+| `call_presence` | Echtzeit-Verfügbarkeit (available/in_call/unavailable) pro User                          |
 
 ```powershell
 # Simulation aktivieren (kein Mikrofon nötig)
@@ -435,14 +434,36 @@ php redis-worker.php --once              # Ein Job, dann Exit
 
 **Stack:** React 18.3, TypeScript 5.5, Vite 5.3, PWA (Service Worker, Web Push).
 
-| Bereich    | Inhalt                                                                                          |
-| ---------- | ----------------------------------------------------------------------------------------------- |
-| Pages      | LoginPage, ChatPage                                                                             |
-| Features   | auth, channels, conversations, members, messages, presence, **calls**                           |
+| Bereich    | Inhalt                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| Pages      | LoginPage, ChatPage                                                                                  |
+| Features   | auth, channels, conversations, members, messages, presence, **calls**                                |
 | Components | ChannelList, MessageList, MessageComposer, MemberList, ChatHeader, Sidebars, Search, **CallOverlay** |
-| API-Client | `src/api/client.ts` – Fetch-Wrapper mit CSRF-Token                                              |
-| PWA        | Service Worker, Push Notifications, Offline-Caching, Background Sync                            |
-| Deep Links | Hash-basiertes Routing für Channels, Conversations, Messages                                    |
+| API-Client | `src/api/client.ts` – Fetch-Wrapper mit CSRF-Token                                                   |
+| PWA        | Service Worker, Push Notifications, Offline-Caching, Background Sync                                 |
+| Deep Links | Hash-basiertes Routing für Channels, Conversations, Messages                                         |
+
+### Nachrichten-Aktionen
+
+- **Toolbar** – Emoji 😀 und Bearbeiten ✏️ als sichtbare Icons, alle weiteren Aktionen (Antwort, Thread, Pin, Speichern, Löschen) im „···“-Dropdown-Menü
+- **Emoji-Picker** – Position: fixed, Viewport-aware (clamps an Ränder), 270px breit, 7 Spalten, leichter Schatten
+- **Inline-Edit** – Eigener Emoji-Picker im Editor mit Cursor-Position-Insertion
+- **Antwort-Fokus** – Input wird automatisch fokussiert wenn Antwort-Funktion ausgewählt wird
+- **Lösch-Berechtigung** – Nur Autor, Admin, Owner und Moderator können Nachrichten löschen (Frontend + Backend)
+- **Edit** – Nur Autor kann eigene Text-Nachrichten bearbeiten
+
+### Saved Messages
+
+- **Self-Conversation** – Jeder Benutzer hat automatisch einen „Saved Messages“-Direktchat
+- **Auto-Erstellung** – Backend erstellt die Self-Conversation beim Laden der Konversationsliste (`listForUser`)
+- **UI** – Bookmark-Icon, sortiert an erster Stelle der Direct Chats, kein Presence-Dot
+- **Header** – Zeigt „Saved Messages“ als Titel, kein Call-Button
+
+### Berechtigungen
+
+- **Channel-Erstellung** – Nur Admins und Owner können neue Channels erstellen (Backend + Frontend)
+- **Nachrichten löschen** – Nur Autor + Admin/Owner/Moderator
+- **Nachrichten bearbeiten** – Nur Autor, nur Text-Nachrichten
 
 ## Datenbank
 
@@ -459,40 +480,40 @@ php vendor/bin/phpunit --testdox
 
 **637 Tests, 1368 Assertions** (PHPUnit 11) – Integration-Tests gegen `cro_chat_test`.
 
-| Test-Datei             | Fokus                                                         |
-| ---------------------- | ------------------------------------------------------------- |
-| AuthTest               | Login, Logout, Session                                        |
-| ChannelAccessTest      | Zugriffskontrolle, Rollen                                     |
-| MessageTest            | CRUD, Replies, Idempotenz, Rechte                             |
-| ConversationTest       | DMs, Gruppen-DMs, Sichtbarkeit                                |
-| ReadReceiptTest        | Unread-Counts, Mark-as-Read                                   |
-| SecurityTest           | CSRF, Rate-Limiting, Passwort-Hash                            |
-| SearchTest             | FULLTEXT-Suche, Scope-Filter                                  |
-| AdvancedSearchTest     | Facettierte Suche, Ranking, Highlights, Saved Searches        |
-| ReactionTest           | Emoji-Reaktionen, Toggle, Aggregation                         |
-| ThreadTest             | Threads, Replies, ReadState                                   |
-| MentionTest            | @Mentions, Autocompletion                                     |
-| NotificationTest       | Mention/DM/Thread/Reaction-Benachrichtigungen                 |
-| PinAndSavedTest        | Pins, Saved Messages                                          |
-| RoleServiceTest        | Rollen-Hierarchie, Berechtigungen                             |
-| ModerationServiceTest  | Mod-Aktionen, Mute, Kick, Rollen-Änderung                     |
-| KnowledgeTest          | Topics, Decisions, Entries, Search, Summaries                 |
-| KnowledgeJobTest       | Thread/Channel-Summarize, Extract-Handler                     |
-| TaskTest               | Tasks, Assignments, Kommentare, Reminders, Message-to-Task    |
-| RichContentTest        | Markdown, Snippets, Link Previews, Drafts, Kollaboration      |
-| AnalyticsTest          | Event-Tracking, Privacy, DAU/WAU, Dashboard, Aggregation      |
-| ScalingTest            | Cache, ObjectStorage, RedisQueue, ScalingService, Admin       |
-| SecurityEnterpriseTest | SecretManager, MFA, SSO, DeviceTracker, Sessions, Abuse       |
-| AiFeatureTest          | Summaries, Action Items, Semantic Search, Suggestions, Config |
-| **CallTest**           | **Call-Lifecycle, Signaling, Glare, History, Presence**       |
-| **CallConcurrencyTest**| **Race Conditions, doppelte Initiierung, Lock-Sicherheit**    |
+| Test-Datei              | Fokus                                                         |
+| ----------------------- | ------------------------------------------------------------- |
+| AuthTest                | Login, Logout, Session                                        |
+| ChannelAccessTest       | Zugriffskontrolle, Rollen                                     |
+| MessageTest             | CRUD, Replies, Idempotenz, Rechte                             |
+| ConversationTest        | DMs, Gruppen-DMs, Sichtbarkeit                                |
+| ReadReceiptTest         | Unread-Counts, Mark-as-Read                                   |
+| SecurityTest            | CSRF, Rate-Limiting, Passwort-Hash                            |
+| SearchTest              | FULLTEXT-Suche, Scope-Filter                                  |
+| AdvancedSearchTest      | Facettierte Suche, Ranking, Highlights, Saved Searches        |
+| ReactionTest            | Emoji-Reaktionen, Toggle, Aggregation                         |
+| ThreadTest              | Threads, Replies, ReadState                                   |
+| MentionTest             | @Mentions, Autocompletion                                     |
+| NotificationTest        | Mention/DM/Thread/Reaction-Benachrichtigungen                 |
+| PinAndSavedTest         | Pins, Saved Messages                                          |
+| RoleServiceTest         | Rollen-Hierarchie, Berechtigungen                             |
+| ModerationServiceTest   | Mod-Aktionen, Mute, Kick, Rollen-Änderung                     |
+| KnowledgeTest           | Topics, Decisions, Entries, Search, Summaries                 |
+| KnowledgeJobTest        | Thread/Channel-Summarize, Extract-Handler                     |
+| TaskTest                | Tasks, Assignments, Kommentare, Reminders, Message-to-Task    |
+| RichContentTest         | Markdown, Snippets, Link Previews, Drafts, Kollaboration      |
+| AnalyticsTest           | Event-Tracking, Privacy, DAU/WAU, Dashboard, Aggregation      |
+| ScalingTest             | Cache, ObjectStorage, RedisQueue, ScalingService, Admin       |
+| SecurityEnterpriseTest  | SecretManager, MFA, SSO, DeviceTracker, Sessions, Abuse       |
+| AiFeatureTest           | Summaries, Action Items, Semantic Search, Suggestions, Config |
+| **CallTest**            | **Call-Lifecycle, Signaling, Glare, History, Presence**       |
+| **CallConcurrencyTest** | **Race Conditions, doppelte Initiierung, Lock-Sicherheit**    |
 
 ```powershell
 # Nur Call-Tests
 php vendor/bin/phpunit tests/Integration/CallTest.php tests/Integration/CallConcurrencyTest.php --testdox
 ```
 
-**Frontend-Tests (Vitest):** 86 Tests — `useCall` Hook, `CallOverlay` Komponente, `CallEngine`
+**Frontend-Tests (Vitest):** 170 Tests — Messages (84: Policy, Actions, Toolbar, MobileMenu, MessageItem, InlineEditor), Calls (86: `useCall` Hook, `CallOverlay`, `CallEngine`)
 
 ```powershell
 cd apps/chat-web
@@ -505,41 +526,41 @@ npx vitest run
 
 ### `apps/chat-api` (PHP)
 
-| Paket | Version | Zweck |
-| ----- | ------- | ----- |
-| `php` | ≥ 8.2 | Laufzeitumgebung |
-| `phpunit/phpunit` | ^11.0 | Test-Framework |
+| Paket             | Version | Zweck            |
+| ----------------- | ------- | ---------------- |
+| `php`             | ≥ 8.2   | Laufzeitumgebung |
+| `phpunit/phpunit` | ^11.0   | Test-Framework   |
 
 > Kein externes Framework — Router, DI, Middleware, ORM vollständig selbst implementiert.
 
 ### `apps/chat-web` (React)
 
-| Paket | Version | Zweck |
-| ----- | ------- | ----- |
-| `react` | ^18.3.1 | UI-Framework |
-| `react-dom` | ^18.3.1 | DOM-Rendering |
-| `typescript` | ^5.5.4 | Typsicherheit |
-| `vite` | ^5.3.4 | Build-Tool + Dev-Server (HMR) |
-| `vitest` | ^4.1.4 | Unit-Test-Framework |
-| `@testing-library/react` | ^16.3.2 | Komponenten-Tests |
-| `@testing-library/jest-dom` | ^6.9.1 | DOM-Matcher |
-| `@vitejs/plugin-react` | ^4.3.1 | React-Plugin für Vite |
-| `jsdom` | ^28.1.0 | Browser-Simulation für Tests |
+| Paket                       | Version | Zweck                         |
+| --------------------------- | ------- | ----------------------------- |
+| `react`                     | ^18.3.1 | UI-Framework                  |
+| `react-dom`                 | ^18.3.1 | DOM-Rendering                 |
+| `typescript`                | ^5.5.4  | Typsicherheit                 |
+| `vite`                      | ^5.3.4  | Build-Tool + Dev-Server (HMR) |
+| `vitest`                    | ^4.1.4  | Unit-Test-Framework           |
+| `@testing-library/react`    | ^16.3.2 | Komponenten-Tests             |
+| `@testing-library/jest-dom` | ^6.9.1  | DOM-Matcher                   |
+| `@vitejs/plugin-react`      | ^4.3.1  | React-Plugin für Vite         |
+| `jsdom`                     | ^28.1.0 | Browser-Simulation für Tests  |
 
 > WebRTC (`RTCPeerConnection`, `getUserMedia`) — native Browser-API, keine externe Bibliothek.
 
 ### `apps/realtime` (Node.js WebSocket-Gateway)
 
-| Paket | Version | Zweck |
-| ----- | ------- | ----- |
-| `ws` | ^8.18.0 | WebSocket-Server |
-| `redis` | ^5.11.0 | Pub/Sub für horizontale Skalierung |
+| Paket    | Version | Zweck                              |
+| -------- | ------- | ---------------------------------- |
+| `ws`     | ^8.18.0 | WebSocket-Server                   |
+| `redis`  | ^5.11.0 | Pub/Sub für horizontale Skalierung |
 | `mysql2` | ^3.11.0 | DB-Verbindung für Auth-Validierung |
-| `dotenv` | ^16.4.5 | Umgebungsvariablen |
-| `tsx` | ^4.19.0 | TypeScript-Ausführung (Dev) |
+| `dotenv` | ^16.4.5 | Umgebungsvariablen                 |
+| `tsx`    | ^4.19.0 | TypeScript-Ausführung (Dev)        |
 
 ### `apps/desktop` (Tauri)
 
-| Paket | Version | Zweck |
-| ----- | ------- | ----- |
-| Tauri 2 | ^2.x | Desktop-Wrapper (Rust + WebView) |
+| Paket   | Version | Zweck                            |
+| ------- | ------- | -------------------------------- |
+| Tauri 2 | ^2.x    | Desktop-Wrapper (Rust + WebView) |

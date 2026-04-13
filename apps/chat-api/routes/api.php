@@ -435,5 +435,6 @@ $router->group([ApiTokenMiddleware::class, CsrfMiddleware::class], function ($ro
 $router->group([AuthMiddleware::class, CsrfMiddleware::class], function ($router) {
     $router->get('/api/dev/calls/scenarios', [DevCallController::class, 'scenarios']);
     $router->post('/api/dev/calls/simulate', [DevCallController::class, 'simulate']);
+    $router->post('/api/dev/calls/reset-presence', [DevCallController::class, 'resetPresence']);
     $router->post('/api/dev/calls/{callId}/bot-action', [DevCallController::class, 'botAction']);
 });

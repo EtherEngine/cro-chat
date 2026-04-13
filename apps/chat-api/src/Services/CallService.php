@@ -644,6 +644,14 @@ final class CallService
      */
     private static function publishPresenceChange(int $userId, string $status): void
     {
+        self::publishPresenceChangePublic($userId, $status);
+    }
+
+    /**
+     * Public wrapper for publishPresenceChange — used by DevCallService.
+     */
+    public static function publishPresenceChangePublic(int $userId, string $status): void
+    {
         $stmt = Database::connection()->prepare(
             'SELECT space_id FROM space_members WHERE user_id = ?'
         );

@@ -38,10 +38,15 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useApp();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
+  // Close when clicking outside (but not on the bell toggle button itself)
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        !(target as Element).closest?.('[data-notification-bell]')
+      ) {
         onClose();
       }
     }
