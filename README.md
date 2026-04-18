@@ -43,12 +43,11 @@ npm run dev
 
 ### 4. Dev-Account
 
-| Feld     | Wert                    |
-| -------- | ----------------------- |
-| E-Mail   | `heather.mason@cro.dev` |
-| Passwort | `password`              |
+| Feld     | Wert                   |
+| -------- | ---------------------- |
+| E-Mail   | `tom.martinez@cro.dev` |
+| Passwort | `password`             |
 
-Alle 27 Seed-User haben dasselbe Passwort (`password`).
 
 ---
 
