@@ -40,7 +40,7 @@ npm run dev
 
 Öffne `http://localhost:5173`.
 
-### 4. Dev-Account
+### 4. Test-Account
 
 | Feld     | Wert                   |
 | -------- | ---------------------- |
